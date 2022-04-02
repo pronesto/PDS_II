@@ -1,0 +1,209 @@
+Quanto imprime o programa abaixo?
+
+#include <iostream>
+int main() {
+  int a[1] = {17};
+  int b[1] = {19};
+  b[1] = 3;
+  std::cout << a[0] << std::endl;
+}
+
+Qual é o problema com esse programa?
+
+Como descobrir esse erro?
+
+$> clang++ -g ArrayOver.cpp
+$> lldb a.out
+(lldb) breakpoint set --name main
+(lldb) process launch
+(lldb) display a
+(lldb) next <ENTER, ENTER, ENTER>
+
+O que é um depurador?
+
+Como usar o depurador do VSCode?
+
+* Configure tasks.json:
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "cppbuild",
+      "label": "C/C++: clang++ build active file",
+      "command": "/usr/bin/clang++",
+      "args": [
+        "-std=c++17",
+        "-stdlib=libc++",
+        "-fdiagnostics-color=always",
+        "-g",
+        "${workspaceFolder}/*.cpp",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: /usr/bin/clang++"
+    }
+  ]
+}
+
+* Configure launch.json:
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+          "name": "clang++ - Build and debug active file",
+          "type": "lldb",
+          "request": "launch",
+          "stopAtEntry": true,
+          "program": "${fileDirname}/${fileBasenameNoExtension}",
+          "args": [],
+          "cwd": "${workspaceFolder}",
+          "preLaunchTask": "C/C++: clang++ build active file"
+        }
+      ]
+}
+
+* Crie um breakpoint, clicando à esquerda do número de linha
+
+* Dispare o processo de depuração: Run > Start Debugging
+
+* Em "WATCH" use o '+' para adicionar uma nova variável.
+
+* Clique em "step over" para depurar o programa.
+
+E o que imprime o programa abaixo?
+
+#include <iostream>
+void arithProg(int* limit, int* sum) {
+  *sum = 0;
+  for (int i = 0; i < *limit; i++) {
+    *sum += i;
+  } 
+}
+int main() {
+  int N = 10;
+  arithProg(&N, &N);
+  std::cout << N << std::endl;
+}
+
+Como podemos "entrar" na função arithProg a partir da função main?
+* Basta usar "step into"
+
+Como podemos observar todas as variáveis de interesse?
+* Use WATCH (N, sum, limit)
+
+E como podemos usar o depurador em linha de comando?
+
+$> clang++ -g ArithProg.cpp
+$> lldb a.out
+(lldb) breakpoint set --name main
+(lldb) process launch
+(lldb) display N
+(lldb) next
+(lldb) si # To enter the function
+(lldb) display *limit
+(lldb) display *sum
+(lldb) next
+
+O que poderíamos fazer para tornar a função arithProg mais segura?
+
+#include <assert.h>
+void arithProg(int* limit, int* sum) {
+  assert(limit != sum);
+  *sum = 0;
+  for (int i = 0; i < *limit; i++) {
+    *sum += i;
+  } 
+}
+
+O que imprime o programa abaixo?
+
+#include <iostream>
+unsigned* getMem() {
+  unsigned x[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+} 
+int main () {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  std::cout << p2[0] << std::endl;
+  p1[0] = 2;
+  std::cout << p2[0] << std::endl;
+  return 0;
+}
+
+Como saber o endereço de p1 e p2 via o depurador?
+
+$> clang++ -g GetMem.cpp
+$> lldb a.out
+(lldb) breakpoint set --name main
+(lldb) process launch
+(lldb) next <ENTER, ENTER>
+(lldb) p p1
+(lldb) p p2
+(lldb) p &(p1[0])
+(lldb) p &(p2[0])
+
+Como saber o endereço de p1 e p2?
+
+int main () {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  printf("&p1: %p, &p2: %p\n", p1, p2);
+  std::cout << p2[0] << std::endl;
+  p1[0] = 2;
+  std::cout << p2[0] << std::endl;
+  return 0;
+}
+
+O que o programa abaixo imprime?
+
+#include <iostream>
+int foo(int v) {
+  int a[1];
+  a[1] = 17;
+  return a[1] + v;
+}
+int main() {
+  int x = 25;
+  std::cout << foo(x) << std::endl;
+}
+
+Como usar o depurador para saber o que está errado?
+
+$> clang++ -g stack.cpp
+$> lldb a.out
+(lldb) breakpoint set -name foo
+(lldb) process launch
+(lldb) frame variable &a[1]
+(lldb) frame variable &v
+
+E dá para depurar no VSCode?
+- Não há muito suporte para inspeção de memória
+
+Mas podemos imprimir os endereços?
+
+#include <iostream>
+#include <stdio.h>
+int foo(int v) {
+  int a[1];
+  printf("&(a[1]): %p, &v: %p\n", &(a[1]), &v);
+  a[1] = 17;
+  return a[1] + v;
+}
