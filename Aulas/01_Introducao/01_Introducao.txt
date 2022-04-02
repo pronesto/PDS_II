@@ -1,0 +1,133 @@
+O que vocês viram em PDS I?
+
+E o que vocês acham que vão ver em PDS II?
+
+O que é necessário para construir um programa?
+- Entender o problema
+- Codificar o programa
+
+E como saber se o programa que a gente fez está certo?
+
+Quão grande pode ser um programa?
+
+Vocês conseguem estimar o tamanho dos maiores programas?
+* Age of Empire Online: 1M
+* World of Warcraft: 5M
+* MSQL: 12M
+* Windows Vista: 50M
+* Mac OS X: 85M
+
+Como é possível desenvolver algo tão grande?
+
+O que seria uma abstração de software?
+
+Como escolher uma boa linguagem de programação?
+
+Quais seriam as diferenças entre C e C++?
+- Idades
+- Autores
+- Propósitos
+
+Como é um "Hello World" em C?
+
+#include <stdio.h>
+int main() {
+  printf("Oi, Mundo!\n");
+  return 0;
+}
+
+Como é um "Hello World" em C++?
+
+#include <iostream>
+int main() {
+  std::cout << "Oi, Mundo!\n";
+  return 0;
+}
+
+Como escrever um programa que soma duas variáveis em C?
+
+#include <stdio.h>
+
+int main() {
+  int x = 0, y = 0;
+  scanf("%d", &x);
+  scanf("%d", &y);
+  printf("%d\n", x + y);
+}
+
+E como escrever o mesmo programa em C++?
+
+#include <iostream>
+int main() {
+  int x = 0, y = 0;
+  std::cin >> x >> y;
+  std::cout << (x+y) << std::endl;
+}
+
+Como contar o número de dígitos em uma string em C?
+
+#include <stdio.h>
+int main() {
+  char buf[80];
+  unsigned num_numbers = 0;
+  scanf("%s", buf);
+  for (unsigned i = 0; i < 80; i++) {
+    if (buf[i] >= '0' && buf[i] <= '9') {
+      num_numbers++;
+    }
+  }
+  printf("%d\n", num_numbers);
+}
+
+Quais são os problemas com este programa?
+- Buffer com tamanho fixo
+- Iterações desnecessárias
+
+Como contar o número de dígitos em uma string em C++?
+
+#include <iostream>
+int main() {
+  std::string word;
+  std::cin >> word;
+  unsigned num_numbers = 0;
+  for (const char c: word) {
+    if (c >= '0' && c <= '9') {
+      num_numbers++;
+    }
+  }
+  std::cout << num_numbers << std::endl;
+}
+
+Seria possível reusar código para saber se um caracter é um dígito?
+
+#include <iostream>
+int main() {
+  std::string word;
+  std::cin >> word;
+  unsigned num_numbers = 0;
+  for (const char c: word) {
+    if (std::isdigit(c)) {
+      num_numbers++;
+    }
+  }
+  std::cout << num_numbers << std::endl;
+}
+
+Como contar a frequência de cada string na entrada padrão?
+
+#include <map>
+#include <iostream>
+int main() {
+  std::string word;
+  std::map<std::string, unsigned int> words;
+  while (std::cin >> word) {
+    words[word]++;
+  }
+  for (const auto& [word, qtd]: words) {
+    std::cout << word << ": " << qtd << std::endl;
+  }
+}
+
+Como este mesmo programa poderia ser escrito em C?
+
+Porque é tão mais fácil escrever o programa em C++?

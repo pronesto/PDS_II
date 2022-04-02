@@ -1,0 +1,137 @@
+O que é um programa executável?
+
+Como um programa executável é produzido?
+
+Por quais formatos o programa C++ passa até chegar a um formato executável?
+[editor] --> source file --> [preprocessor] --> preprocessed source file
+--> [compiler] --> assembly language file --> [assembler] -->
+object file --> [linker] --> executable file -->
+[loader] --> running program in memory
+
+Como compilar e executar o programa abaixo?
+
+#include <iostream>
+#define CUBE(x) (x)*(x)*(x)
+int main() {
+  int i = 0;
+  int x = 2;
+  int sum = 0;
+  while (i++ < 100) {
+    sum += CUBE(x);
+  }
+  std::cout << sum << std::endl;
+  return 0;
+}
+
+Como visualizar a árvore de sintaxe abstrata deste programa?
+$> $LLVM/clang++ -c -Xclang -ast-view Cube.cpp
+
+Como produzir o código pré-processado?
+$> clang++ -E Cube.cpp -o Cube.p.cpp
+
+Qual é o formato do programa pré-processado? Texto ou binário?
+
+Por que o programa pré-processado é tão grande?
+
+O que significam essas declarações em Cube.p.cpp?
+
+E se a gente remover "#include <iostream>" do programa, e pré-processar?
+
+O que aconteceu com "CUBE(x)"?
+
+Como a gente produz o código de montagem?
+$> clang++ -S Cube.p.cpp
+
+Que formato é este de Cube.p.s?
+
+O que significa "ldr w8, [sp, #8]"?
+
+E o que significa "cmp w8, #100"?
+
+O que aconteceu com a chamada "std::cout << sum"?
+
+Qual é a linguagem de montagem usada neste exemplo?
+
+Como gerar código de uma linguagem de montagem diferente?
+setllvm
+$LLVM/clang -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -S -emit-llvm Cube.cpp
+$LLVM/llc -march=x86 Cube.ll -o Cube.x86
+
+Quantas linguagens de montagem existem?
+$LLVM/llc -version
+
+Como a gente transforma esse programa assembly em código binário?
+$> as Cube.s -o Cube.o
+
+Qual é o formato de Cube.o?
+
+O que falta para podermos executar Cube.o?
+
+O que é uma biblioteca compartilhada?
+
+Como ligar Cube.o com a biblioteca necessária para sua execução?
+$> ld -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk Cube.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/12.0.5/lib/darwin/libclang_rt.osx.a -o Cube.exe
+
+Por que Cube.exe é tão maior que Cube.o?
+
+O que são otimizações de código?
+
+Como usar otimizações de código via o compilador?
+$> clang++ -O1 -S Cube.cpp -o Cube.opt.s
+
+Como saber se o programa foi realmente otimizado?
+
+O que é um Ambiente de Desenvolvimento Integrado?
+
+O que é VSCode?
+
+Alguém conhece algum tutorial VSCode?
+https://code.visualstudio.com/docs/cpp/config-clang-mac
+
+Como criar um projeto usando VSCode?
+# Open ~/Documents/FernandoRepo/Classes/DCC204/Aulas/02_Ambientes/HelloWorld
+# Using VSCode
+
+Como editar um programa?
+File > new file > HelloWorld.cpp
+
+Como configurar a compilação?
+Terminal > Configure Default Build Task
+
+O que significa o arquivo de configuração "tasks.json"?
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "cppbuild",
+      "label": "C/C++: clang++ build active file",
+      "command": "/usr/bin/clang++",
+      "args": [
+        "-std=c++17",
+        "-stdlib=libc++",
+        "-fdiagnostics-color=always",
+        "-g",
+        "${workspaceFolder}/*.cpp",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: /usr/bin/clang++"
+    }
+  ]
+}
+
+O que é intellisense?
+- Intelligent Code Completion
+- Program Information
+
+Como saber quais métodos pertencem à class string?
