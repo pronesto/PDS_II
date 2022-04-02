@@ -11,7 +11,19 @@ int main() {
 Qual é o problema com esse programa?
 
 Como descobrir esse erro?
+# Linux:
+$> g++ -g -fsanitize=address ArrayOver.cpp
+$> ./a.out
 
+# OSX:
+$> clang++ -g -fsanitize=address ArrayOver.cpp
+$> ./a.out
+
+É possível usar um depurador para descobrir esse tipo de erro?
+
+O que é um depurador?
+
+# OSX:
 $> clang++ -g ArrayOver.cpp
 $> lldb a.out
 (lldb) breakpoint set --name main
@@ -19,11 +31,22 @@ $> lldb a.out
 (lldb) display a
 (lldb) next <ENTER, ENTER, ENTER>
 
-O que é um depurador?
+# Linux:
+$> g++ -g ArrayOver.cpp
+$> gdb ./a.out
+(gdb) break
+(gdb) run
+(gdb) next
+(gdb) display a
+(gdb) next
+(gdb) display b
+(gdb) next
 
 Como usar o depurador do VSCode?
 
 * Configure tasks.json:
+"Terminal > Configure Default Build Task"
+
 {
   "version": "2.0.0",
   "tasks": [
@@ -56,6 +79,8 @@ Como usar o depurador do VSCode?
 }
 
 * Configure launch.json:
+"Select cpp file > Run > Add Configuration... >  C++ (GDB/LLDB)"
+
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
@@ -77,7 +102,8 @@ Como usar o depurador do VSCode?
 
 * Crie um breakpoint, clicando à esquerda do número de linha
 
-* Dispare o processo de depuração: Run > Start Debugging
+* Dispare o processo de depuração:
+"Run > Start Debugging"
 
 * Em "WATCH" use o '+' para adicionar uma nova variável.
 
@@ -106,6 +132,19 @@ Como podemos observar todas as variáveis de interesse?
 
 E como podemos usar o depurador em linha de comando?
 
+# gdb:
+$> g++ -g ArithProg.cpp
+$> lldb a.out
+(gdb) break main
+(gdb) run
+(gdb) display N
+(gdb) next [ENTER]
+(gdb) step
+(gdb) display sum
+(gdb) display limit
+(gdb) quit
+
+# OSX:
 $> clang++ -g ArithProg.cpp
 $> lldb a.out
 (lldb) breakpoint set --name main
@@ -148,6 +187,13 @@ int main () {
   return 0;
 }
 
+O que quer dizer o aviso de compilação?
+"warning: address of local variable ‘x’ returned"
+
+O que ocorre se compilarmos esse programa com "-fsanitize=address"?
+# Linux:
+$> g++ -g -fsanitize=address GetMem.cpp
+
 Como saber o endereço de p1 e p2 via o depurador?
 
 $> clang++ -g GetMem.cpp
@@ -185,6 +231,16 @@ int main() {
   std::cout << foo(x) << std::endl;
 }
 
+Podemos usar "fsanitize=address" para ver o que pode estar errado?
+
+# Linux:
+$> g++ OutOfBounds.cpp -g -fsanitize=address
+$> ./a.out
+
+# OSX:
+$> clang++ -g -fsanitize=address OutOfBounds.cpp
+$> ./a.out
+
 Como usar o depurador para saber o que está errado?
 
 $> clang++ -g stack.cpp
@@ -207,3 +263,97 @@ int foo(int v) {
   a[1] = 17;
   return a[1] + v;
 }
+
+Escreva um programa para armazenar em um vetor todos os fatores primos de um
+numero inteiro.
+
+#include <vector>
+#include <iostream>
+int main() {
+  int num;
+  unsigned next_div = 2;
+  std::vector<unsigned> divisors;
+  std::cin >> num;
+  while (num != 1) {
+    if (num % next_div) {
+      num /= next_div;
+      divisors.push_back(next_div);
+    } else {
+      next_div++;
+    }
+  }
+  for (unsigned u: divisors) {
+    std::cout << "  " << u;
+  }
+  std::cout << std::endl;
+}
+
+O programa abaixo possui um bug. Você consegue encontrá-lo com o depurador?
+
+$> clang++ -g Divisor.cpp
+$> lldb a.out
+(lldb) breakpoint set -name foo
+(lldb) process launch
+(lldb) display num
+(lldb) display next_div
+(lldb) display divisor
+(lldb) next [ENTER*]
+
+Como consertar o programa?
+  ...
+  while (num != 1) {
+    if (num % next_div == 0) {
+      num /= next_div;
+      divisors.push_back(next_div);
+    } else {
+      next_div++;
+    }
+  }
+  ...
+
+E se passarmos um número negativo, o que ocorre?
+
+Como consertar o programa?
+  ...
+  std::cin >> num;
+  assert(num > 0);
+  ...
+
+Estamos testando se números pares são divisores: 4, 6, 8, etc. Como evitar isso?
+
+#include <vector>
+#include <iostream>
+int testa_divisores(
+    std::vector<unsigned>& divisores,
+    unsigned next_div,
+    int num
+) {
+  while (num % next_div == 0) {
+    num /= next_div;
+    divisores.push_back(next_div);
+  }
+  return num;
+}
+int main() {
+  int num;
+  std::vector<unsigned> divisores;
+  std::cin >> num;
+  assert(num > 0);
+  num = testa_divisores(divisores, 2, num);
+  unsigned next_div = 3;
+  while (num != 1) {
+    num = testa_divisores(divisores, next_div, num);
+    next_div += 2;
+  }
+  for (unsigned u: divisores) {
+    std::cout << "  " << u;
+  }
+  std::cout << std::endl;
+}
+
+Dá para usar um laço 'for' em vez de um while?
+  ...
+  for (unsigned next_div = 3; num != 1; next_div += 2) {
+    num = testa_divisores(divisores, next_div, num);
+  }
+  ...
