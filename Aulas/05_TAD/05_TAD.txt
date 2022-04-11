@@ -1,0 +1,478 @@
+* Can you give me examples of data types?
+
+* What is a data type?
+- Set of values and the operations that work on those values.
+
+* Consider the data type 'bool'. What's this set? How many elements exist there?
+
+* What about the data type 'int'?
+
+* What about the data type 'string'?
+
+* What is an _abstract_ data type?
+- Set of values, determined by the operations that operate on them.
+
+* What is the meaning of the word "abstract" in an ADT?
+
+* Why is it so important to encapsulate implementation details?
+
+* Can you tell me how to find the size of a chain of characters?
+
+#include <iostream>
+
+unsigned get_size(char* s) {
+  int size = 0;
+  while (s[size] != 0) {
+    size++;
+  }
+  return size;
+}
+
+int main(int argc, char** argv) {
+  int i = 0;
+  while (i < argc) { 
+    std::cout << get_size(argv[i]) << std::endl;
+    i++;
+  }
+  return 0;
+}
+
+* Is there any other way?
+
+#include <string.h>
+#include <iostream>
+  
+int main(int argc, char** argv) {
+  int i = 0;
+  while (i < argc) {
+    std::cout << strlen(argv[i]) << std::endl;
+    i++;
+  }
+  return 0;
+}
+
+* Which one is better?
+
+* What is the cost of modifying software?
+
+* How to reduce this cost?
+
+* Which mechanisms do programming languages provide to separate interface from
+  implementation?
+
+* How can we do it in C?
+
+* What about in C++?
+
+* What is a 'struct'?
+- Name space that we can instantiate.
+
+* How can we reuse the names of variables in code?
+- Give them a surname :-)
+
+* Can you write a struct to represent a 2D point?
+
+struct Point {
+  double x;
+  double y;
+};
+
+int main() {
+  Point p0;
+  p0.x = 2.71;
+  p0.y = 3.14;
+  std::cout << p0.x << std::endl;
+  std::cout << p0.y << std::endl;
+}
+
+* What can the type Point do?
+
+* Can the type Point do anything on its own?
+
+* What should the type Point know?
+
+* Could it know how to print itself?
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  double x;
+  double y;
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+int main() {
+  Point p0;
+  p0.x = 2.71;
+  p0.y = 3.14;
+  std::cout << p0.toString() << std::endl;
+  Point p1;
+  p1.x = 1.41;
+  p1.y = 1.61;
+  std::cout << p1.toString() << std::endl;
+}
+
+* What are the problems with this program?
+
+* Can you access directly the 'x' and 'y' fields of the struct?
+
+*. Let's add accessors to the fields of the data type:
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  double x;
+  double y;
+  double getX() { return x; }
+  double getY() { return y; }
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+* How can you use the accessors?
+
+int main() {
+  Point p0;
+  p0.x = 2.71;
+  p0.y = 3.14;
+  std::cout << p0.x << std::endl;
+  std::cout << p0.getX() << std::endl;
+}
+
+* But we can still access the x and y variables directly. How can you avoid this 
+problem?
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  double getX() { return x; }
+  double getY() { return y; }
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+  // The 'private' key word lets us inform what is not visible outside the
+  // scope of the struct:
+  private:
+  double x;
+  double y;
+};
+
+int main() {
+  Point p0;
+  p0.x = 2.71;
+  p0.y = 3.14;
+  std::cout << p0.x << std::endl;
+  std::cout << p0.getX() << std::endl;
+}
+
+* Why the program does not compile?
+
+* Can you make it compile?
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  double getX() { return x; }
+  double getY() { return y; }
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+  private:
+  double x;
+  double y;
+};
+
+int main() {
+  Point p0;
+  std::cout << p0.getX() << std::endl;
+  Point p1;
+  std::cout << p1.getX() << std::endl;
+}
+
+* But now, how can we initialize the fields of the Point?
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  Point (double xx, double yy) {
+    x = xx;
+    y = yy;
+  }
+  double getX() { return x; }
+  double getY() { return y; }
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+  private:
+  double x;
+  double y;
+};
+
+int main() {
+  Point p0(3.14, 2.71);
+  std::cout << p0.getX() << std::endl;
+  Point p1(1.42, 1.61);
+  std::cout << p1.getX() << std::endl;
+}
+
+* What is the role of the constructor?
+
+* All that the constructor does is to initialize data. For that, we have special
+syntax:
+
+#include <string>
+#include <iostream>
+
+struct Point {
+  Point (double xx, double yy) : x(xx), y(yy) {}
+  double getX() { return x; }
+  double getY() { return y; }
+  std::string toString() {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+  private:
+  double x;
+  double y;
+};
+
+int main() {
+  Point p0(3.14, 2.71);
+  std::cout << p0.getX() << std::endl;
+  Point p1(1.42, 1.61);
+  std::cout << p1.getX() << std::endl;
+}
+
+* Can we use a header file, just like in C?
+
+// The header file point.h:
+//
+struct Point {
+  Point (double xx, double yy) : x(xx), y(yy) {}
+  double getX();
+  double getY();
+  std::string toString();
+  private:
+  double x;
+  double y;
+};
+
+// The implementation file point.cpp:
+//
+#include <string>
+
+#include "point.h"
+  
+double Point::getX() {
+  return x;
+}
+
+double Point::getY() {
+  return y;
+}
+
+std::string Point::toString() {
+  return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+}
+
+// The main function will be in a main.cpp file:
+//
+#include <iostream>
+
+#include "point.h"
+
+int main() {
+  Point p0(3.14, 2.71);
+  std::cout << p0.getX() << std::endl;
+  Point p1(1.42, 1.61);
+  std::cout << p1.getX() << std::endl;
+}
+
+* How can we compile these files?
+$> clang++ point.cpp main.cpp
+
+* Why are the includes in the .cpp file, and not in the .h file?
+
+* If we move the includes from the .cpp to the .h, will the program still work?
+
+* Let's create a TAD Set. What are the fundamental operations of Sets?
+- create
+- insert
+- remove
+- contains
+
+* Can you define the interface of this TAD?
+
+struct Set {
+  Set (unsigned);
+  bool contains(unsigned);
+  void insert(unsigned);
+  void remove(unsigned);
+  private:
+  bool *_data;
+  unsigned _capacity;
+};
+
+* Can you define an implementation to this TAD, based on an array of booleans?
+
+#include "set_0.h"
+
+Set::Set(unsigned capacity) : _capacity(capacity) {
+  _data = new bool[_capacity];
+  for (int i = 0; i < _capacity; i++) {
+    _data[i] = false;
+  } 
+} 
+
+bool Set::contains(unsigned element) {
+  return _data[element];
+} 
+
+void Set::insert(unsigned element) {
+  _data[element] = true;
+}
+
+void Set::remove(unsigned element) {
+  _data[element] = false;
+}
+
+* What's the role of the argument that we pass to the initializer?
+  E.g.: Set (unsigned)
+
+* Can you write a test to it?
+
+#include <iostream>
+
+#include "set_0.h"
+
+int main() {
+  Set set0(10);
+  //
+  // Test insert and contains:
+  set0.insert(2);
+  set0.insert(3);
+  set0.insert(5);
+  std::cout << "contains 1 " << set0.contains(1) << std::endl;
+  std::cout << "contains 2 " << set0.contains(2) << std::endl;
+  std::cout << "contains 3 " << set0.contains(3) << std::endl;
+  std::cout << "contains 4 " << set0.contains(4) << std::endl;
+  std::cout << "contains 5 " << set0.contains(5) << std::endl;
+  //
+  // Test remove and contains:
+  std::cout << "------\n";
+  set0.remove(1);
+  set0.remove(3);
+  set0.remove(5);
+  std::cout << "contains 1 " << set0.contains(1) << std::endl;
+  std::cout << "contains 2 " << set0.contains(2) << std::endl;
+  std::cout << "contains 3 " << set0.contains(3) << std::endl;
+  std::cout << "contains 4 " << set0.contains(4) << std::endl;
+  std::cout << "contains 5 " << set0.contains(5) << std::endl;
+}
+
+* How many bits are used to store the array of booleans?
+
+* Can you write some code to check if your answer is correct?
+
+#include <climits>
+#include <stdio.h>
+
+#include "set_0.h"
+
+Set::Set(unsigned capacity) : _capacity(capacity) {
+  _data = new bool[_capacity];
+  for (int i = 0; i < _capacity; i++) {
+    _data[i] = false;
+  }
+  printf("Size in bits = %lu\n", CHAR_BIT * _capacity * sizeof(_data[0]));
+}
+
+* Would it be possible to use bits, instead of bytes, to store the set?
+
+// Let's change the implementation of set. This time, we shall use an
+// array of char. Notice that the interface remains the same:
+
+struct Set {
+  Set (unsigned);
+  bool contains(unsigned);
+  void insert(unsigned);
+  void remove(unsigned);
+  private:
+  char *_data;
+  unsigned _capacity;
+};
+
+* How would be the implementation that stores elements as bits?
+
+#include <climits>
+#include <stdio.h>
+
+#include "set_2.h"
+
+Set::Set(unsigned capacity) : _capacity(capacity) {
+  const unsigned size = _capacity/CHAR_BIT + 1;
+  _data = new char[size];
+  for (int i = 0; i < size; i++) {
+    _data[i] = false;
+  }
+  printf("Size in bits = %lu\n", CHAR_BIT * size * sizeof(_data[0]));
+}
+
+bool Set::contains(unsigned element) {
+  unsigned index = element / CHAR_BIT;
+  char offset = element % CHAR_BIT;
+  char bit = 1 << offset;
+  return _data[index] & bit;
+}
+
+void Set::insert(unsigned element) {
+  unsigned index = element / CHAR_BIT;
+  char offset = element % CHAR_BIT;
+  char bit = 1 << offset;
+  char mask = _data[index] | bit;
+  _data[index] = mask;
+} 
+  
+void Set::remove(unsigned element) {
+  unsigned index = element / CHAR_BIT;
+  char offset = element % CHAR_BIT;
+  char bit = 1 << offset;
+  _data[element] &= ~bit;
+}
+
+* Can you explain each line of the 'contains' function?
+
+bool Set::contains(unsigned element) {
+  unsigned index = element / CHAR_BIT;
+  char offset = element % CHAR_BIT;
+  char bit = 1 << offset;
+  return _data[index] & bit;
+}
+
+* What is now the size, in bits, of a set that stores 100 elements?
+
+$ clang++ test_set_2.cpp set_2.cpp 
+$ ./a.out 
+Size in bits = 104
+
+* Is is the size 104, and not 100, exactly?
+
+* And what is the size, in bits, of the same set, this time using the array of
+  booleans? Use the program below:
+
+#include <iostream>
+#include "set_0.h"
+int main() {
+  Set set0(100);
+}
+
+$ clang++ check_size_set_0.cpp set_1.cpp 
+$ ./a.out 
+Size in bytes = 800
