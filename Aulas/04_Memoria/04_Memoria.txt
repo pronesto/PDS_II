@@ -1,0 +1,260 @@
+Onde ficam armazenados os valores que um programa manipula?
+
+Será que há algum valor que não fica em memória?
+
+E quais memórias existem no computador?
+
+Como a memória do programa é dividida?
+- static
+- heap
+- stack
+
+O que seria memória estática?
+
+Onde fica armazenado o arranjo x do programa abaixo?
+
+#include <iostream>
+int main() {
+  int x[] = {2, 3, 5, 7, 11, 13, 17, 19};
+  for (int i : x) {
+    std::cout << i << std::endl;
+  } 
+  return 0;
+}
+
+Como ver isso no código assembly?
+$> clang++ -S -std=c++11 static_1.cpp
+
+E strings, onde elas ficam?
+
+Você consegue ver a string no código assembly do programa abaixo?
+
+#include <iostream>
+int main () {
+  std::string str = "Hello";
+  str[1] = 'u';
+  std::cout << str << std::endl;
+  return 0;
+}
+
+E as variáveis globais? Por exemplo, onde fica 'global_var' no programa abaixo?
+
+#include <iostream>
+int global_var = 13;
+int main() {
+  int local_var = 17;
+  std::cout << local_var << std::endl;
+  std::cout << global_var << std::endl;
+}
+
+E 'local_var', você consegue vê-la no código assembly?
+
+Você já ouviu falar de variáveis estáticas?
+
+O que será impresso pelo programa abaixo?
+
+#include <iostream>
+int getAndSet() {
+  static int counter = 0;
+  return ++counter;
+}
+int main() {
+  std::cout << getAndSet() << std::endl;
+  std::cout << getAndSet() << std::endl;
+  std::cout << getAndSet() << std::endl;
+}
+
+E quantas variáveis 'counter' existem no programa abaixo?
+
+#include <iostream>
+int getAndSet_1() {
+  static int counter = 0;
+  return ++counter;
+}
+int getAndSet_2() {
+  static int counter = 0;
+  return ++counter;
+}
+int main() {
+  for (int i = 0; i < 7; i++) {
+    std::cout << "1) " << getAndSet_1() << std::endl;
+    std::cout << "2) " << getAndSet_2() << std::endl;
+  } 
+}
+
+E quantas variáveis 'counter' existem no programa abaixo?
+
+#include <iostream>
+static int counter = 0; 
+int getAndSet_1() {
+  return ++counter;
+}
+int getAndSet_2() {
+  return ++counter;
+}
+int main() {
+  for (int i = 0; i < 7; i++) {
+    std::cout << "1) " << getAndSet_1() << std::endl;
+    std::cout << "2) " << getAndSet_2() << std::endl;
+  }
+}
+
+O que fica armazenado na pilha?
+
+Você consegue imprimir o endereço de 'aux' no programa abaixo?
+
+#include <iostream>
+int fact (int n) {
+  int aux = n;
+  // printf("(%p, %d)\n", &aux, n);
+  if (aux > 1) {
+    return aux * fact(aux - 1);
+  } else {
+    return 1;
+  } 
+}
+int main(int argc, char** argv) {
+  std::cout << fact(argc) << std::endl;
+  return 0;
+}
+
+O que perderíamos se não existisse a pilha? Quais programas deixariam de funcionar?
+
+Você lembra qual era o problema deste programa abaixo?
+
+#include <stdio.h>
+unsigned* getMem() {
+  unsigned x[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+} 
+int main () {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  p1[0] = 2;
+  p2[0] = 13;
+  printf("p1 = %d\n", p1[0]);
+}
+
+Como consertar esse programa?
+
+#include <stdio.h>
+unsigned* getMem() {
+  unsigned *x = new unsigned[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+}
+int main () {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  p1[0] = 2;
+  p2[0] = 13;
+  printf("p1 = %d\n", p1[0]);
+}
+
+Como liberar a memória apontada por 'x', depois que 'x' já não é mais usada?
+
+int main () {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  p1[0] = 2;
+  p2[0] = 13;
+  printf("p1 = %d\n", p1[0]);
+  delete p1;
+  delete p2;
+}
+
+Qual é o problema do programa abaixo?
+
+#include <stdio.h>
+unsigned* getMem() {
+  unsigned *x = new unsigned[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+}
+int main () {
+  unsigned *p1 = getMem();
+  p1[0] = 2;
+  printf("p1 = %d\n", p1[0]);
+  delete p1;
+  printf("p1 = %d\n", p1[0]);
+}
+
+E este programa abaixo, o que ele imprime?
+
+#include <stdio.h> 
+unsigned* getMem() {
+  unsigned *x = new unsigned[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+}
+int main () {
+  unsigned *p1 = getMem();
+  p1[0] = 2;
+  printf("p1 = %d\n", p1[0]);
+  delete p1;
+  unsigned *p2 = getMem();
+  p2[0] = 13;
+  printf("p2 = %d\n", p2[0]);
+  p1[0] = 19;
+  printf("p2 = %d\n", p2[0]);
+}
+
+O código abaixo consegue trocar o valor das variáveis 'x' e 'y'?
+
+#include <iostream>
+void swap(int x, int y) {
+  int tmp = x;
+  x = y;
+  y = tmp;
+}
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << "a = " << a << ", b = " << b << std::endl;
+  swap(a, b);
+  std::cout << "a = " << a << ", b = " << b << std::endl;
+}
+
+Como consertar esse código?
+
+#include <iostream>  
+void swap(int* x, int* y) {
+  int tmp = *x;
+  *x = *y;
+  *y = tmp;
+}
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << "a = " << a << ", b = " << b << std::endl;
+  swap(&a, &b);
+  std::cout << "a = " << a << ", b = " << b << std::endl;
+}
+
+Vocês já ouviram falar de 'referências'?
+
+A implementação abaixo de 'swap' funciona?
+
+void swapR(int& x, int& y) {
+  int tmp = x;
+  x = y;
+  y = tmp;
+}
+
+Qual a diferença entre ponteiros e referências?
+- Inicialização: "swapP(&a, nullptr);" funciona, mas "swapR(a, nullptr)" não
+
+Qual é o problema com ponteiros e referências?
