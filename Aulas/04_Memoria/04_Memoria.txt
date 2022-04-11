@@ -158,6 +158,17 @@ int main () {
   printf("p1 = %d\n", p1[0]);
 }
 
+Esse programa possui um vazamento de memória. Como observar isso?
+$> g++ -g -fsanitize=address GetMem.cpp
+$> ./a.out
+
+Vocês já ouviram falar de uma ferramenta chamada valgrind?
+$> g++ -g GetMem.cpp
+$> valgrind ./a.out
+
+Como saber onde a memória foi alocada?
+$> valgrind --leak-check=full ./a.out
+
 Como liberar a memória apontada por 'x', depois que 'x' já não é mais usada?
 
 int main () {
@@ -188,6 +199,14 @@ int main () {
   delete p1;
   printf("p1 = %d\n", p1[0]);
 }
+
+Como capturar esse problema com valgrind?
+
+$> g++ -g Dangling.cpp
+$> valgrind ./a.out
+
+Pela saída de valgrind, onde acontece a alocação, a deleção e a leitura 
+inválida?
 
 E este programa abaixo, o que ele imprime?
 
@@ -258,3 +277,53 @@ Qual a diferença entre ponteiros e referências?
 - Inicialização: "swapP(&a, nullptr);" funciona, mas "swapR(a, nullptr)" não
 
 Qual é o problema com ponteiros e referências?
+
+Você poderia explicar a diferença de tempo entre sum_copy e sum_ref?
+
+#include <vector>
+#include <chrono>
+#include <iostream>
+
+long sum_copy(std::vector<int> v) {
+  long sum = 0;
+  for (int i: v) {
+    sum += i;
+  }
+  return sum;
+}
+
+long sum_ref(std::vector<int>& v) {
+  long sum = 0;
+  for (int i: v) {
+    sum += i;
+  }
+  return sum;
+}
+
+int main() {
+  std::chrono::steady_clock::time_point begin, end;
+  unsigned vec_size;
+  std::cin >> vec_size;
+
+  std::vector<int> v;
+  for (int i = 0; i < vec_size; i++) {
+    v.push_back(i);
+  }
+  begin = std::chrono::steady_clock::now();
+
+  std::cout << sum_copy(v) << std::endl;
+
+  end = std::chrono::steady_clock::now();
+  std::cout << "Tempo sum_copy = " <<
+    std::chrono::duration_cast<std::chrono::microseconds>
+    (end - begin).count() << "[us]" << std::endl;
+
+  begin = std::chrono::steady_clock::now();
+
+  std::cout << sum_ref(v) << std::endl;
+
+  end = std::chrono::steady_clock::now();
+  std::cout << "Tempo sum_ref = " <<
+    std::chrono::duration_cast<std::chrono::microseconds>
+    (end - begin).count() << "[us]" << std::endl;
+}
