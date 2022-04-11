@@ -115,6 +115,8 @@ int main() {
   std::cout << p1.toString() << std::endl;
 }
 
+* Can you explain what is this toString function within Point?
+
 * What are the problems with this program?
 
 * Can you access directly the 'x' and 'y' fields of the struct?
@@ -252,6 +254,9 @@ int main() {
 
 * Can we use a header file, just like in C?
 
+#ifndef POINT
+#define POINT
+
 // The header file point.h:
 //
 struct Point {
@@ -263,6 +268,11 @@ struct Point {
   double x;
   double y;
 };
+
+#endif
+
+* What are these ifndef/define/endif guards?
+- They are called "include guards"
 
 // The implementation file point.cpp:
 //
@@ -286,7 +296,7 @@ std::string Point::toString() {
 //
 #include <iostream>
 
-#include "point.h"
+#include "point.hpp"
 
 int main() {
   Point p0(3.14, 2.71);
@@ -302,6 +312,8 @@ $> clang++ point.cpp main.cpp
 
 * If we move the includes from the .cpp to the .h, will the program still work?
 
+* Let's divide the symbols in Point into constructor, methods and attributes?
+
 * Let's create a TAD Set. What are the fundamental operations of Sets?
 - create
 - insert
@@ -309,6 +321,9 @@ $> clang++ point.cpp main.cpp
 - contains
 
 * Can you define the interface of this TAD?
+
+#ifndef SET_H
+#define SET_H
 
 struct Set {
   Set (unsigned);
@@ -320,9 +335,11 @@ struct Set {
   unsigned _capacity;
 };
 
+#endif
+
 * Can you define an implementation to this TAD, based on an array of booleans?
 
-#include "set_0.h"
+#include "set.hpp"
 
 Set::Set(unsigned capacity) : _capacity(capacity) {
   _data = new bool[_capacity];
@@ -350,7 +367,7 @@ void Set::remove(unsigned element) {
 
 #include <iostream>
 
-#include "set_0.h"
+#include "set.hpp"
 
 int main() {
   Set set0(10);
@@ -405,7 +422,7 @@ struct Set {
   void insert(unsigned);
   void remove(unsigned);
   private:
-  char *_data;
+  char *_data; // The type has changed!
   unsigned _capacity;
 };
 
@@ -420,7 +437,7 @@ Set::Set(unsigned capacity) : _capacity(capacity) {
   const unsigned size = _capacity/CHAR_BIT + 1;
   _data = new char[size];
   for (int i = 0; i < size; i++) {
-    _data[i] = false;
+    _data[i] = 0;
   }
   printf("Size in bits = %lu\n", CHAR_BIT * size * sizeof(_data[0]));
 }
@@ -444,7 +461,8 @@ void Set::remove(unsigned element) {
   unsigned index = element / CHAR_BIT;
   char offset = element % CHAR_BIT;
   char bit = 1 << offset;
-  _data[element] &= ~bit;
+  char mask = ~bit;
+  _data[index] &= mask;
 }
 
 * Can you explain each line of the 'contains' function?
