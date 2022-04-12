@@ -131,3 +131,18 @@ int main() {
 Como este mesmo programa poderia ser escrito em C?
 
 Porque é tão mais fácil escrever o programa em C++?
+
+Seria possível fazer o mesmo programa de alguma outra forma?
+
+#include <set>
+#include <iostream>
+int main() {
+  std::string word;
+  std::multiset<std::string> words;
+  while (std::cin >> word) {
+    words.insert(word);
+  }
+  for (std::string word: words) {
+    std::cout << word << ": " << words.count(word) << std::endl;
+  }
+}
