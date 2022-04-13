@@ -1,0 +1,287 @@
+Vocês lembram o que são tipos abstratos de dados?
+
+Quais operações fariam sentido no tipo abstrato de dados Lista?
+
+Como definir a interface desse tipo?
+
+#ifndef LISTA_H
+#define LISTA_H
+struct Lista {
+  public:
+  bool vazia() const;
+  void insere(int data);
+  int primeiro() const;
+  void remove(int data);
+  void mostra() const;
+};
+#endif
+
+O que significa o 'const' após o nome do método?
+
+Como poderíamos implementar essa lista usando um encadeamento de ponteiros?
+
+#ifndef LISTA_H
+#define LISTA_H
+struct Celula {
+  int data;
+  Celula* next;
+};
+
+struct Lista {
+  private:
+    Celula* head;
+    Celula* tail;
+  public:
+    Lista(): head(nullptr), tail(nullptr) {}
+    void insere(int data);
+    int primeiro() const;
+    void remove(int data);
+    void mostra();
+};
+#endif
+
+Como seria a implementação de "vazia"?
+
+bool Lista::vazia() const {
+  return head == nullptr;
+}
+
+O que seria um teste razoável para verificar se vazia() funciona corretamente?
+
+#include <iostream>
+#include <cassert>
+#include "Lista.hpp"
+int main() {
+  Lista lista;
+  assert(lista.vazia());
+  return 0;
+}
+
+O que seria um bom teste para verificar se primeiro e insere estão corretos?
+
+int main() {
+  Lista lista;
+  lista.insere(111);
+  assert(lista.primeiro() == 111);
+  return 0;
+}
+
+Existem vantagens em escrever os testes antes de escrevermos os códigos que passam
+nesses testes?
+
+Como seria a implementação de "insere"?
+
+void Lista::insere(int data) {
+  Celula* aux = new Celula;
+  aux->data = data;
+  aux->next = nullptr;
+  if (vazia()) {
+    head = aux;
+    tail = aux;
+  } else {
+    tail->next = aux;
+    tail = aux;
+  }
+}
+
+Como seria a implementação de primeiro()?
+
+int Lista::primeiro() const {
+  if (vazia()) { 
+    std::cout << "Tentativa de remover elemento de lista vazia\n";
+    return 0;
+  } else {
+    return head->data;
+  } 
+}
+
+Como poderíamos testar o método "remove"?
+
+int main() {
+  Lista lista;
+  assert(lista.vazia());
+  lista.insere(111);
+  assert(lista.primeiro() == 111);
+  lista.insere(222);
+  lista.remove(111);
+  assert(lista.primeiro() == 222);
+}
+
+E como seria a implementação de "remove"?
+
+void Lista::remove(int data) {
+  if (vazia()) {
+    std::cout << "Tentativa de remover elemento de lista vazia\n";
+  }
+  Celula *current = head;
+  Celula *previous = nullptr;
+  while (current != nullptr) {
+    if (current->data == data) {
+      if (previous == nullptr) { // HEAD
+        head = current->next;
+      } else if (current->next == nullptr) { //TAIL
+        previous->next = nullptr;
+        tail = previous;
+      } else {
+        previous->next = current->next;
+      }
+      delete current;
+      return;
+    }
+    previous = current;
+    current = current->next;
+  }
+}
+
+E como seria a implementação de "mostra"?
+
+void Lista::mostra() const {
+  Celula *aux = head;
+  while (aux != nullptr) {
+    std::cout << aux->data << std::endl;
+    aux = aux->next;
+  }
+}
+
+Você poderia implementar uma função para testar todas as partes de nosso TAD?
+
+#include <iostream>
+#include <cassert>
+
+#include "ListaEncadeada.hpp"
+
+int main() {
+  Lista lista;
+
+  // Propriedade 1: toda lista eh criada vazia:
+  //
+  assert(lista.vazia());
+
+  // Propriedade 2: o primeiro elemento inserido eh o primeiro elemento da
+  // lista:
+  //
+  lista.insere(111);
+  assert(lista.primeiro() == 111);
+  lista.insere(222);
+  assert(lista.primeiro() == 111);
+  lista.mostra();
+
+  // Teste 3: remover o primeiro elemento:
+  //
+  lista.remove(111);
+  assert(lista.primeiro() == 222);
+
+  // Propriedade 3: ao remover um elemento que nao estah na lista, a lista
+  // permanece inalterada:
+  //
+  lista.remove(333);
+  assert(lista.primeiro() == 222);
+  assert(!lista.vazia());
+
+  // Propriedade 4: ao remover todos os elementos da lista, ela estah vazia:
+  //
+  lista.remove(222);
+  assert(lista.vazia());
+
+  return 0;
+}
+
+Haveria alguma outra implementação diferente do TAD Lista?
+
+Poderíamos implementar a lista com um vetor?
+
+#ifndef LISTA_H
+#define LISTA_H
+#include <vector>
+struct Lista {
+  private:
+    std::vector<int> _buffer;
+  public:
+    bool vazia() const;
+    void insere(int data);
+    int primeiro() const;
+    void remove(int data);
+    void mostra() const;
+};
+#endif
+
+Poderíamos usar o mesmo teste de lista encadeada para essa nova implementação?
+#include "ListaVetor.hpp" // Precisamos mudar a definição da lista!
+
+Vamos implementar uma Lista de Vetores com métodos sem corpo, só para termos um
+ponto de partida?
+
+#include "ListaVetor.hpp"
+bool Lista::vazia() const {
+  return false;
+}
+void Lista::insere(int data) {}
+int Lista::primeiro() const {
+  return 0;
+}
+void Lista::remove(int data) {}
+void Lista::mostra() const {}
+
+Como seria a implementação de vazia?
+
+bool Lista::vazia() const {
+  return _buffer.empty();
+}
+
+Como Seria a implementação de insere?
+
+void Lista::insere(int data) {
+  _buffer.push_back(data);
+}
+
+Como Seria a implementação de primeiro?
+
+#include <iostream>
+int Lista::primeiro() const {
+  if (vazia()) {
+    std::cout << "Tentativa de remover elemento de lista vazia\n";
+    return 0;
+  } else {
+    return _buffer[0];
+  }
+}
+
+Como Seria a implementação de remove?
+
+void Lista::remove(int data) {
+  if (vazia()) {
+    std::cout << "Tentativa de remover elemento de lista vazia\n";
+  } else {
+    std::vector<int>::iterator it =
+      std::find(_buffer.begin(), _buffer.end(), data);
+    if (it != _buffer.end()) {
+      _buffer.erase(it);
+    }
+  }
+}
+
+Como Seria a implementação de mostra?
+
+void Lista::mostra() const {
+  for (int i = 0; i < _buffer.size(); i++) {
+    std::cout << _buffer[i] << std::endl;
+  }
+}
+
+Por que não é necessário alterar código do arquivo de testes para usar a nova
+implementação de lista?
+
+Neste código abaixo, o que é a interface da lista, e o que é a implementação?
+
+struct Lista {
+  private:
+    std::vector<int> _buffer;
+  public:
+    bool vazia() const;
+    void insere(int data);
+    int primeiro() const;
+    void remove(int data);
+    void mostra() const;
+};
+
+As interfaces de ListaVetor e ListaEncadeada são iguais?
