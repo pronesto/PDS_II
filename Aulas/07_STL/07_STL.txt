@@ -1,0 +1,534 @@
+* What is a software library?
+
+* What is a software framework?
+
+* Libraries and frameworks are two ways to reuse software. What's the difference
+  between them?
+
+* Has any one ever heard about STL?
+
+* Which kind of programs can we find within STL?
+
+== vector ==
+
+* Do you remember how to use vectors?
+
+* Can you read a file with numbers, and sort these numbers? What's the first
+  thing that must be done?
+- Read the file
+
+* Can you implement the program to read the file?
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::vector<int> vec;
+    // Open the file
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    }
+    // Read the data in the file:
+    int data;
+    while (infile >> data) {
+      vec.push_back(data);
+    }
+    // Print the results
+    for (auto d: vec) {
+      std::cout << d << " ";
+    }
+    std::cout << std::endl;
+  }
+  return 0;
+}
+
+* What is the meaning of the syntax std::vector<int>?
+- What's "std::"?
+- What's <int>?
+
+* And now, how can you sort the contents of the file?
+
+#include <algorithm>
+...
+std::sort(vec.begin(), vec.end());
+...
+
+* What if we want to sort in descending order?
+
+#include <algorithm>
+...
+std::sort(vec.begin(), vec.end(), std::greater<int>());
+...
+
+* How can we liberate the memory used by the vector?
+
+vec.clear();
+
+* In this example, is it necessary to liberate memory?
+
+* Instead of reading integers, can we read points, and sort them by the norm?
+
+* First, how to read a file with 2D double points?
+
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+
+struct Point {
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::vector<Point*> vec;
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    }
+    double x, y;
+    while (infile >> x >> y) {
+      vec.push_back(new Point(x, y));
+    }
+    for (auto p: vec) {
+      std::cout << p->to_string() << std::endl;
+    }
+    vec.clear();
+  }
+  return 0;
+}
+
+* What is the meaning of const in "std::string to_string() const"?
+
+* How can we compute the norm of a point?
+
+struct Point {
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  const double norm() const {
+    return sqrt(x*x + y*y);
+  }
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+* How can we sort points?
+
+* Can you define a function to compare two pointers to points?
+
+bool comparePoints(Point *p1, Point *p2) {
+  return p1->norm() < p2->norm();
+}
+
+* Now, how can we use the 'sort' function to sort points?
+
+std::sort(vec.begin(), vec.end(), comparePoints);
+for (auto p: vec) {
+  std::cout << p->to_string() << ", Norm = " << p->norm() << std::endl;
+}
+
+* How can we know if there are two points that are the same in the file?
+
+* Can you write a function to sort the vector, and then traverse it, to see
+  if there are two points that are equal to each other?
+
+bool hasEqualPoints(std::vector<Point*>& points) {
+  if (points.size() <= 1) {
+    return false;
+  } else {
+    std::sort(points.begin(), points.end(), comparePoints);
+    for (int i = 0, j = 1; j < points.size(); i++, j++) {
+      if (points[i]->x == points[j]->x && points[i]->y == points[j]->y) {
+        return true;
+      } 
+    }
+    return false;
+  }
+}
+
+* Now, can you use this function to solve our problem?
+
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <cmath>
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::vector<Point*> vec;
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    }
+    double x, y;
+    while (infile >> x >> y) {
+      vec.push_back(new Point(x, y));
+    }
+    std::cout << "Has two equal points? " << hasEqualPoints(vec) << std::endl;
+    vec.clear();
+  }
+  return 0;
+}
+
+* Would it be possible to solve the same problem using a better data structure?
+
+== set ==
+
+* Can you find all the duplicates in a file of integers?
+
+* Which algorithm could you use?
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <set>
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else {
+      int n;
+      std::set<int> numbers;
+      std::vector<int> duplicates;
+      while (infile >> n) {
+        if (numbers.find(n) == numbers.end()) {
+          numbers.insert(n);
+        } else {
+          duplicates.push_back(n);
+        }
+      }
+      for (int n: duplicates) {
+        std::cout << n << " ";
+      }
+      std::cout << std::endl;
+      duplicates.clear();
+      numbers.clear();
+    }
+  }
+  return 0;
+}
+
+* The elements are ordered in the set. Could you use this fact to sort the
+  integers?
+
+#include <iostream>
+#include <fstream>
+#include <set>
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else {
+      int n;
+      std::set<int> numbers;
+      while (infile >> n) {
+        numbers.insert(n);
+      }
+      for (int n: numbers) {
+        std::cout << n << " ";
+      }
+      std::cout << std::endl;
+      numbers.clear();
+    }
+  }
+  return 0;
+}
+
+* But, now the duplicates are no longer printed. Can you solve this problem
+  somehow?
+
+#include <iostream>
+#include <fstream>
+#include <set>
+
+int main(int argc, char** argv) {
+...
+      std::multiset<int> numbers;
+...
+  return 0;
+}
+
+* How can we simply change the type of set to multiset, without modifying
+  anything in the rest of the program, and everything still works?
+
+* Can you read the points, and add them into a std::set, instead of a vector?
+
+* Can you try to solve the problem of finding if the file has a repeated point
+  using a set this time?
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <set>
+
+struct Point {
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  const double norm() const {
+    return sqrt(x*x + y*y);
+  }
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else { 
+    std::set<Point*> points;
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else { 
+      double x, y;
+      while (infile >> x >> y) {
+        Point *point = new Point(x, y);
+        if (points.find(point) == points.end()) {
+          points.insert(point);
+        } else {
+          std::cout << "Repeated point = " << point->to_string() << std::endl;
+          points.clear();
+          return 0;
+        }
+      }
+      std::cout << "No repeated points were found.\n";
+    }
+  }
+  return 0;
+}
+
+* This program does not work. Why?
+
+* Can you add this code to print the points, and their addresses?
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else { 
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else { 
+      std::set<Point*> points;
+      double x, y;
+      while (infile >> x >> y) {
+        Point *point = new Point(x, y);
+        if (points.find(point) == points.end()) {
+          points.insert(point);
+        } else {
+          std::cout << "Repeated point = " << point->to_string() << std::endl;
+          points.clear();
+          return 0;
+        }
+      }
+      for (auto p : points) {
+        std::cout << p->to_string() << " at " <<
+          ((unsigned long)p % 1000000) << std::endl;
+      }
+      std::cout << "No repeated points were found.\n";
+    }
+  }
+  return 0;
+}
+
+* So, in the end, can you see how the pointers are stored in the set?
+
+* And how can you modify this program, so that it works?
+
+* Points need to be comparable. We shall compare them by the norm. We will add
+  the '<' operator to points. The new definition will be like the code below.
+  Can you explain how it works?
+
+struct Point {
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  const double norm() const {
+    return sqrt(x*x + y*y);
+  }
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+  bool operator < (const Point& otherPoint) const {
+    return (norm() < otherPoint.norm());
+  }
+};
+
+* And now, we need to compare points, not pointers to points. Can you modify
+  the main function to account for that change?
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else {
+      std::set<Point> points;
+      double x, y;
+      while (infile >> x >> y) {
+        Point point(x, y);
+        if (points.find(point) == points.end()) {
+          points.insert(point);
+        } else {
+          std::cout << "Repeated point = " << point.to_string() << std::endl;
+          points.clear();
+          return 0;
+        }
+      }
+      std::cout << "No repeated points were found.\n";
+    }
+  }
+  return 0;
+}
+
+== map ==
+
+* I want to know how many points have the same norms. How can we solve this
+  problem?
+
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <map>
+
+struct Point { 
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  const double norm() const {
+    return sqrt(x*x + y*y);
+  }
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else {
+      std::map<double, size_t> norms = {};
+      double x, y;
+      while (infile >> x >> y) {
+        Point point(x, y);
+        norms[point.norm()]++;
+      }
+      for (auto const& entry: norms) {
+        std::cout << entry.first << ": " << entry.second << std::endl;
+      } 
+    }
+  }
+  return 0;
+}
+
+* Ok, but what if we want something more approximate? Could you print, instead,
+  all the points with norm between [n, n+1[, where 'n' is an integer?
+
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <map>
+
+struct Point {
+  Point(const double xx, const double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+  const double norm() const {
+    return sqrt(x*x + y*y);
+  }
+  std::string to_string() const {
+    return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+  }
+};
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Syntax: cmd <file_name>\n";
+    return 1;
+  } else {
+    std::ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+      std::cerr << "Failed to open file\n";
+      return 2;
+    } else {
+      std::map<int, size_t> norms = {};
+      double x, y;
+      while (infile >> x >> y) {
+        Point point(x, y);
+        int approxNorm = floor(point.norm());
+        norms[approxNorm]++;
+      }
+      for (auto const& entry: norms) {
+        std::cout << entry.first << ": " << entry.second << std::endl;
+      }
+    }
+  }
+  return 0;
+}
+
+== Summary ==
+
+* We have seen many data structures. Can you explain when we use each one?
+- vector
+  - indexation by integers
+  - insertion at the end
+- set
+  - fast recovery of items
+  - ordered output
+- multiset
+  - set with multiple elements
+- map
+  - when necessary to build tables
