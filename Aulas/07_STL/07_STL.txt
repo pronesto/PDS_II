@@ -231,8 +231,6 @@ int main(int argc, char** argv) {
         std::cout << n << " ";
       }
       std::cout << std::endl;
-      duplicates.clear();
-      numbers.clear();
     }
   }
   return 0;
@@ -264,7 +262,6 @@ int main(int argc, char** argv) {
         std::cout << n << " ";
       }
       std::cout << std::endl;
-      numbers.clear();
     }
   }
   return 0;
@@ -466,8 +463,8 @@ int main(int argc, char** argv) {
         Point point(x, y);
         norms[point.norm()]++;
       }
-      for (auto const& entry: norms) {
-        std::cout << entry.first << ": " << entry.second << std::endl;
+      for (auto const& [norm, num_points]: norms) {
+        std::cout << norm << ": " << num_points << std::endl;
       } 
     }
   }
@@ -511,8 +508,8 @@ int main(int argc, char** argv) {
         int approxNorm = floor(point.norm());
         norms[approxNorm]++;
       }
-      for (auto const& entry: norms) {
-        std::cout << entry.first << ": " << entry.second << std::endl;
+      for (auto const& [norm, num_points]: norms) {
+        std::cout << norm << ": " << num_points << std::endl;
       }
     }
   }
