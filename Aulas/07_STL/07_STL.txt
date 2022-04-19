@@ -17,7 +17,36 @@
   thing that must be done?
 - Read the file
 
-* Can you implement the program to read the file?
+* How can you read numbers from the standard input (that's how numbers are read in VPLs)?
+
+#include <iostream>
+#include <vector>
+int main(int argc, char** argv) {
+  std::vector<int> vec;
+  // Read the data in the file:
+  int data;
+  while (std::cin >> data) {
+    vec.push_back(data);
+  }
+  // Print the results
+  for (auto d: vec) {
+    std::cout << d << " ";
+  }
+  std::cout << std::endl;
+  return 0;
+}
+
+* What is the meaning of the syntax std::vector<int>?
+- What's "std::"?
+- What's <int>?
+
+* You can pass a file to the program, using redirection, e.g.:
+
+$> clang++ readAndSort.cpp
+$> echo "3 5 2 1 5 3" > t.txt
+$> ./a.out < t.txt
+
+* The problem with this approach is that it only reads from the standard input. It has not error treatment whatsoever. Can you implement the program to read an actual file, e.g., you open the file, and read its contents?
 
 #include <iostream>
 #include <fstream>
@@ -47,10 +76,6 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
-
-* What is the meaning of the syntax std::vector<int>?
-- What's "std::"?
-- What's <int>?
 
 * And now, how can you sort the contents of the file?
 
@@ -138,7 +163,7 @@ bool comparePoints(Point *p1, Point *p2) {
   return p1->norm() < p2->norm();
 }
 
-* Now, how can we use the 'sort' function to sort points?
+* Now, how can we use the 'std::sort' function to sort points?
 
 std::sort(vec.begin(), vec.end(), comparePoints);
 for (auto p: vec) {
