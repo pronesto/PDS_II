@@ -1,0 +1,576 @@
+* What's a good program?
+- Readable
+- Extensible
+- Efficient
+
+* Today we will focus on readability. What can we do to improve readability?
+- Choose good names
+- Comment the code
+- Use verifiable documentation (Names of types, const, restrict)
+- Avoid aliasing whenever possible
+- Avoid type casts
+- Avoid macros if possible (const, inline)
+- Avoid too many nesting levels
+- Indent the program
+- Limit the length of functions
+- Use coding guidelines
+- Reuse standard library whenever you can
+- Use assertions
+- Limit the number of responsibilities of modules
+- Use exceptions instead of error codes
+
+== Names ==
+
+* Which program "things" can we name?
+- Variables
+- Constants
+- Structs/Classes
+- Functions
+- Types
+
+* How to find good variable names?
+- Nouns
+- use lower case for the first letter
+
+* How to find good constant names?
+- Nouns
+- All capitals(?)
+
+* How to find good class/struct names?
+- Nouns
+- First letter upper case
+
+* How to find good function names?
+- Verbs
+- use lower case for the first letter
+
+* How to find good type names?
+- Nouns
+- First letter lower case for primitive types
+- First letter upper case for composite types (structs, classes, unions)
+
+* How to create a type name in C++?
+// Define the new type name:
+typedef unsigned long ulong;
+// Use the new type name to declare types:
+unsigned long l1;
+ulong l2;
+
+* How to name variables: underlines or camel case?
+- list_of_students
+- listOfStudents
+
+* Can you see the benefit of using pronounceable names?
+
+struct DtaRcrd {
+  time_t cridmahms;
+  time_t moddmahms;
+  int psqquint = 102;
+};
+
+- or -
+
+struct DataRecord {
+  time_t hourOfCreation;
+  time_t hourOfModification;
+  int registerId = 102;
+};
+
+* What is the program below doing?
+
+list<vector<int>> pegarValores(list<vector<int>> lista1) {
+  list<vector<int>> lista2;
+  for (vector<int> x : lista1)
+    if (x[0] == 4)
+      lista2.push_back(x);
+  return lista2;
+}
+
+* Can you find better names for this program?
+
+* And now, is the program clearer?
+
+const int POSICAO_DE_STATUS = 0;
+const int IDENTIFICADOR_DE_BANDEIRA = 4;
+list<vector<int>> pegarCelulasMarcadas(list<vector<int>> tabuleiro) {
+  list<vector<int>> celulasMarcadas;
+  for (vector<int> celula : tabuleiro)
+    if (celula[POSICAO_DE_STATUS] == IDENTIFICADOR_DE_BANDEIRA)
+      celulasMarcadas.push_back(celula);
+  return celulasMarcadas;
+}
+
+* Why it is still hard to understand this program?
+
+* What about now?
+
+list<Celula> pegarCelulasMarcadas(list<Celula> tabuleiro) {
+  list<Celula> celulasMarcadas;
+  for (Celula celula : tabuleiro)
+    if (celula.estaMarcada())
+      celulasMarcadas.push_back(celula);
+  return celulasMarcadas;
+}
+
+* How could you improve the readability of this method even further?
+
+== Comments ==
+
+* And now, is it easier to recognize what this function is doing?
+
+/**
+ * This function returns a list with all the 'marked' cells within the
+ * board. A cell is marked if the player has put a 'flag' onto it. The
+ * flag indicates that that cell does not contain a landmine.
+ * @param tabuleiro the board that contains all the cells.
+ * @return a list with all and only the marked cells of the board.
+ */
+ list<Celula> pegarCelulasMarcadas(list<Celula> tabuleiro) {
+   list<Celula> celulasMarcadas;
+   for (Celula celula : tabuleiro)
+     if (celula.estaMarcada())
+       celulasMarcadas.push_back(celula);
+   return celulasMarcadas;
+ }
+
+* What is this style of comments?
+- doxygen (using the Javadoc style)
+
+* Can you add comments to our definition of the Set ADT?
+
+struct Set {
+  Set (unsigned capacity);
+  bool contains(unsigned e);
+  void insert(unsigned e);
+  void remove(unsigned e);
+  private:
+  char *_data;
+  unsigned _capacity;
+};
+
+-----------------------------------------------------------------
+/**
+ * \struct Set
+ *
+ * \brief Implementation of the Set ADT
+ *
+ * This struct implements the Set abstract data type. This definition of set
+ * receives integers only, and assumes that the maximum integer is known, and
+ * that every integer is non-negative.
+ */
+struct Set {
+  /**
+   * \brief The constructor method.
+   * \param capacity The largest integer (minus one) that can be stored.
+   */
+  Set (unsigned capacity);
+  /**
+   * \brief Determines if an element belongs into the set.
+   * \param e The element that will be checked.
+   * \return True if the element is in the set, and false otherwise.
+   */
+  bool contains(unsigned e);
+  /**
+   * \brief Adds an element to the set.
+   * \param e The element that will be inserted in the set.
+   */
+  void insert(unsigned e);
+  /**
+   * \brief Removes an element from the set.
+   * \param e The element that will be removed from the set.
+   */
+  void remove(unsigned e);
+  private:
+  char *_data; ///< An array that will store the elements as a bitmap.
+  unsigned _capacity; ///< The largest integer (-1) that can be stored.
+};
+-----------------------------------------------------------------
+
+* How can we generate the documentation using doxygen?
+$> doxygen Set.h
+
+== Verifiable Documentation ==
+
+* Can the compiler check if your comments make sense?
+
+* There are some kinds of documentation that the compiler can verify.
+  Can you name a few examples?
+  - Names of types
+  - 'restrict'
+  - const
+
+* What is the problem with this program?
+
+int main() {
+  double point1[2];
+  double point2[2];
+  point1[0] = 3.14;
+  point1[1] = 2.76;
+  point2[0] = point1[1];
+}
+
+* Can you improve it?
+
+typedef double Point[2];
+int main() {
+  Point point1;
+  Point point2;
+  point1[0] = 3.14;
+  point1[1] = 2.76;
+  point2[0] = point1[1];
+}
+
+* There are still problems. Which problems?
+
+* Can you improve the program even further?
+
+struct Point {
+  double x;
+  double y;
+};
+  
+int main() {
+  Point point1;
+  Point point2;
+  point1.x = 3.14;
+  point1.y = 2.76;
+  point2.x = point1.y;
+}
+
+* Can you improve this program even further?
+
+struct Point {
+  const double x;
+  const double y;
+};
+
+int main() {
+  Point point1;
+  Point point2;
+  point1.x = 3.14;
+  point1.y = 2.76;
+  point2.x = point1.y;
+}
+
+* What's the benefit to declare the fields as constants?
+
+* But now the program does not compile. What can we do?
+
+struct Point {
+  Point(double xx, double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+};
+
+int main() {
+  Point point1(3.14, 2.76);
+  Point point2(0, point1.x);
+}
+
+* Is there any problem to let constant fields to be public?
+
+* Write a program to sum up two vectors of points, adding the result to a new
+  vector.
+
+#include <vector>
+
+using std::vector;
+
+struct Point {
+  Point(double xx, double yy): x(xx), y(yy) {}
+  const double x;
+  const double y;
+};
+
+void sum(vector<Point>& vv, vector<Point>& v1, vector<Point>& v2) {
+  for (int i = 0; i < v1.size() && i < v2.size(); i++) {
+    Point p(v1[i].x + v2[i].x, v1[i].y + v2[i].y);
+    vv.push_back(p);
+  } 
+}
+
+int main() {
+  Point point1(3.14, 2.76);
+  Point point2(0, point1.x);
+}
+
+== Aliasing ==
+
+* Has anyone ever heard this expression before: Aliasing?
+
+* How can we return two values from one function?
+
+* Write a function to return the max and min of two values.
+
+#include <iostream>
+void min_max(int* max, int *min, int *x, int *y) {
+  if (*x > * y) {
+    *max = *x;
+    *min = *y;
+  } else {
+    *max = *y;
+    *min = *x;
+  }
+}
+int main() {
+  int a = 2;
+  int b = 3;
+  int max, min;
+  min_max(&max, &min, &a, &b);
+  std::cout << "Max = " << max << std::endl;
+  std::cout << "Min = " << min << std::endl;
+}
+
+* What's the problem with this code below?
+
+* Does the program below fix the problem?
+
+#include <iostream>
+  
+void min_max(int* max, int *min, const int x, const int y) {
+  if (x > y) {
+    *max = x;
+    *min = y;
+  } else {
+    *max = y;
+    *min = x;
+  }
+}
+
+int main() {
+  int a = 2;
+  int b = 3;
+  int max, min;
+  min_max(&max, &min, a, b);
+  std::cout << "Max = " << max << std::endl;
+  std::cout << "Min = " << min << std::endl;
+}
+
+* How could you fix it?
+
+#include <iostream>
+
+struct MinMax {
+  MinMax(int mmax, int mmin): max(mmax), min(mmin) {}
+  const int max;
+  const int min;
+};
+  
+MinMax min_max(const int x, const int y) {
+  if (x > y) {
+    return MinMax(x, y);
+  } else {
+    return MinMax(y, x);
+  }
+}
+
+int main() {
+  int a = 2;
+  int b = 3;
+  MinMax mm = min_max(&max, &min, a, b);
+  std::cout << "Max = " << m.max << std::endl;
+  std::cout << "Min = " << m.min << std::endl;
+}
+
+== Type Casts ==
+
+* What is a type cast?
+
+* When are they useful?
+
+* Can you assign a Point to a Index2D, declared as follows?
+
+struct Point {
+  float x;
+  float y;
+};
+
+struct Index2D {
+  int i;
+  int j;
+};
+
+* How can you perform this assignment?
+
+int main() {
+  Point point1;
+  point1.x = 3.14;
+  point1.y = 2.71;
+  std::cout << point1.x << ", " << point1.y << std::endl;
+  Index2D *i2d = (Index2D*)&point1;
+  std::cout << i2d->i << ", " << i2d->j << std::endl;
+}
+
+* What's the problem with this kind of type cast?
+
+---- Not seen in class, but left here, as a curiosity! ----
+* Can you improve it somehow?
+
+#include <iostream>
+  
+struct Point {
+  float x;
+  float y;
+  // This method is just an incantation.
+  // We will learn about it later in the course!
+  virtual void dummy() {}
+};
+
+struct Index2D {
+  int i;
+  int j;
+};
+
+int main() {
+  Point point1;
+  point1.x = 3.14;
+  point1.y = 2.71;
+  std::cout << point1.x << ", " << point1.y << std::endl;
+  Index2D *i2d = dynamic_cast<Index2D*>(&point1);
+  std::cout << i2d->i << ", " << i2d->j << std::endl;
+}
+
+== Macros ==
+
+* What is a macro?
+
+* Can you write a macro to return the maximum of two elements?
+
+#include <iostream>
+
+#define MAX(X, Y) ((X) >= (Y) ? (X) : (Y))
+
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << MAX(a, b) << std::endl;
+}
+
+* How does the pre-processed program look like?
+
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << ((a) >= (b) ? (a) : (b)) << std::endl;
+}
+
+* Could you use a function instead?
+
+#include <iostream>
+
+int max(const int a, const int b) {
+  return a >= b ? a : b;
+}
+
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << max(a, b) << std::endl;
+}
+
+* Are there advantages to use the macro?
+
+* What are the disadvantages?
+- no debugging information
+- multiple evaluation
+
+* Can you illustrate the multiple evaluation?
+
+* What does this program below print?
+
+#include <iostream>
+  
+#define MAX(X, Y) ((X) >= (Y) ? (X) : (Y))
+
+int main() {
+  int a = 2;
+  int b = 3;
+  std::cout << MAX(++a, b) << std::endl;
+}
+
+== Nesting ==
+
+* Why is it a good practice to limit column length within 80 characters or so?
+
+* Can you point out the problem with the program below?
+
+#include <string>
+
+bool isImportant(std::ifstream *file) {
+  std::string line;
+  if (file) {
+    if (file->is_open()) {
+      while (std::getline(*file, line)) {
+        if (line.find("important") != -1) {
+          std::cout << line << std::endl;
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+int main() {
+  std::ifstream infile("file.txt");
+  std::cout << isImportant(&infile) << std::endl;
+}
+
+* How can we improve the implementation of function isImportant?
+
+bool isImportant(std::ifstream *file) {
+  std::string line;
+  if (file) {
+    if (file->is_open()) {
+      while (std::getline(*file, line)) {
+        if (line.find("important") != -1) {
+          std::cout << line << std::endl;
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+* Can we improve the code even more?
+
+bool isImportant(std::ifstream *file) {
+  std::string line;
+  if (file && file->is_open()) { 
+    while (std::getline(*file, line)) { 
+      if (line.find("important") != -1) { 
+        std::cout << line << std::endl;
+        return true;
+      } 
+    } 
+  }
+  return false;
+}
+
+* Why is "if (a && b) ..." the same as "if (a) { if (b) ... }"?
+
+* And, can you improve the code even more?
+
+#include <iostream>
+#include <fstream>
+bool contains_str(std::ifstream *file, std::string query) {
+  std::string line;
+  if (file && file->is_open()) {
+    while (std::getline(*file, line)) {
+      if (line.find(query) != -1) {
+        std::cout << line << std::endl;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+int main() {
+  std::ifstream infile("file.txt");
+  std::cout << contains_str(&infile, "important") << std::endl;
+}
