@@ -117,6 +117,81 @@ bool Pessoa::mesma_pessoa(Pessoa &pessoa) const {
 * Por que encapsulação de dados é importante?
 - Diminui o custo de modificar software
 
+* Como seria a implementação desse tipo de dados pessoa no paradigma procedural?
+  Dica: é como se esse tipo de dados fosse implementado em C:
+
+// Pessoa.h:
+//
+#ifndef PESSOA_H
+#define PESSOA_H
+#include <string>
+struct Pessoa {
+  std::string nome;
+  unsigned long cpf;
+  unsigned char idade;
+};
+void init(Pessoa *p, std::string n, unsigned long cpf, unsigned short i);
+std::string to_string(Pessoa p);
+void faz_aniversario(Pessoa* p);
+bool mesma_pessoa(Pessoa *p0, Pessoa *p1);
+#endif
+
+// Pessoa.cpp:
+//
+#include "Pessoa.hpp"
+void init(Pessoa *p, std::string n, unsigned long cpf, unsigned short i) {
+  p->nome = n;
+  p->cpf = cpf;
+  p->idade = i;
+}
+std::string to_string(Pessoa p) {
+  return "Nome: " + p.nome + ", CPF: " + std::to_string(p.cpf) + ", Idade: " +
+    std::to_string(p.idade);
+}
+void faz_aniversario(Pessoa* p) {
+  p->idade++;
+}
+bool mesma_pessoa(Pessoa *p0, Pessoa *p1) {
+  return p0->cpf == p1->cpf;
+}
+
+// main.cpp:
+//
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  Pessoa p1, p2, p3;
+  init(&p1, "Fernando Magno", 4567729921, 10);
+  init(&p2, "Fernando Quintao", 4567729921, 10);
+  init(&p3, "Juliano Paiva", 7376390211, 10);
+  std::cout << "Testando o metodo to_string:\n";
+  std::cout << to_string(p1) << std::endl;
+  std::cout << to_string(p2) << std::endl;
+  std::cout << to_string(p3) << std::endl;
+  std::cout << "Testando a comparacao entre pessoas:\n";
+  std::cout << mesma_pessoa(&p1, &p2) << std::endl;
+  std::cout << mesma_pessoa(&p2, &p1) << std::endl;
+  std::cout << mesma_pessoa(&p1, &p3) << std::endl;
+  std::cout << mesma_pessoa(&p3, &p1) << std::endl;
+  std::cout << "Testando o metodo que simula o aniversario:\n";
+  std::cout << to_string(p1) << std::endl;
+  faz_aniversario(&p1);
+  std::cout << to_string(p1) << std::endl;
+}
+
+* No código acima, seria possível tornar privados os campos da struct Pessoa?
+  Em outras palavras, seria possível definir Pessoa assim?
+
+struct Pessoa {
+  private:
+  std::string nome;
+  unsigned long cpf;
+  unsigned char idade;
+};
+
+* Porque o fato de o tipo "saber" fazer as coisas permite que dados sejam
+  encapsulados?
+
 * Faça um programa para ler um arquivo contendo várias triplas (nome, cpf, idade),
   eh que diga se há algum cpf associado com nome ou idades diferentes.
 
