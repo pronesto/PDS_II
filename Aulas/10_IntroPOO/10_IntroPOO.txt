@@ -1,0 +1,294 @@
+* O que é POO?
+- Antropomorfização dos dados
+
+* Se a programação não é orientada a objetos, ela é orientada a que?
+
+* Qual foi a primeira linguagem de de programação orientada a objetos?
+
+* Quando surgiu essa linguagem? E onde ela apareceu?
+
+* O que é um objeto?
+- Objetos são dados que conseguem responder mensagens.
+
+* Como objetos são criados?
+- via classes.
+
+* Você poderia criar uma classe para representar pessoas?
+
+* Quais seriam as ações que uma instância de Pessoa sabe fazer?
+
+* Antes de criarmos a classe, você poderia pensar em um arquivo para testar essa
+  classe?
+
+#include <iostream>
+
+#include "Pessoa.hpp"
+
+int main() {
+  Pessoa p1("Fernando Magno", 4567729921, 10);
+  Pessoa p2("Fernando Quintao", 4567729921, 10);
+  Pessoa p3("Juliano Paiva", 7376390211, 10);
+
+  std::cout << "Testando o metodo to_string:\n";
+  std::cout << p1.to_string() << std::endl;
+  std::cout << p2.to_string() << std::endl;
+  std::cout << p3.to_string() << std::endl;
+
+  std::cout << "Testando a comparacao entre pessoas:\n";
+  std::cout << p1.mesma_pessoa(p2) << std::endl;
+  std::cout << p2.mesma_pessoa(p1) << std::endl;
+  std::cout << p1.mesma_pessoa(p3) << std::endl;
+  std::cout << p3.mesma_pessoa(p1) << std::endl;
+
+  std::cout << "Testando o metodo que simula o aniversario:\n";
+  std::cout << p1.to_string() << std::endl;
+  p1.faz_aniversario();
+  std::cout << p1.to_string() << std::endl;
+}
+
+* E quais seriam as "coisas" que uma Pessoa sabe fazer?
+  public:
+    Pessoa(std::string nome, unsigned long cpf, unsigned short idade):
+      _nome(nome), _cpf(cpf), _idade(idade) {}
+    std::string to_string() const;
+    void faz_aniversario();
+    bool mesma_pessoa(Pessoa &pessoa) const;
+
+* Antes de avançarmos, você poderia criar um arquivo .hpp e outro .cpp que pelo
+  menos compilem com o teste acima?
+
+// Arquivo .hpp:
+//
+#ifndef PESSOA_H
+#define PESSOA_H
+#include <string>
+class Pessoa {
+  public:
+    Pessoa(std::string nome, unsigned long cpf, unsigned char idade){}
+    std::string to_string() const;
+    void faz_aniversario();
+    bool mesma_pessoa(Pessoa &pessoa) const;
+};
+#endif
+
+// Arquivo .cpp:
+//
+#include "Pessoa.hpp"
+  std::string Pessoa::to_string() const {
+  return "";
+}
+void Pessoa::faz_aniversario() {}
+bool Pessoa::mesma_pessoa(Pessoa &pessoa) const {
+  return false;
+}
+
+* Quais seriam os dados privados de uma pessoa?
+  private:
+    std::string _nome;
+    unsigned long _cpf;
+    unsigned short _idade;
+
+* Nesse caso, como ficaria o metodo construtor?
+    Pessoa(std::string nome, unsigned long cpf, unsigned short idade):
+      _nome(nome), _cpf(cpf), _idade(idade) {}
+
+* E como seria a implementação de cada método?
+
+std::string Pessoa::to_string() const {
+  return "Nome: " + _nome + ", CPF: " + std::to_string(_cpf) + ", Idade: " +
+    std::to_string(_idade);
+}
+
+void Pessoa::faz_aniversario() {
+  _idade++;
+}
+
+bool Pessoa::mesma_pessoa(Pessoa &pessoa) const {
+  return this->_cpf == pessoa._cpf;
+}
+
+* O método mesma_pessoa usa a palavra 'this'. O que quer dizer isso?
+
+* Qual é a diferença entre 'class' e 'struct'?
+
+* Porque POO se tornou tão importante?
+- Traz a encapsulação dos dados para a linguagem.
+
+* Por que encapsulação de dados é importante?
+- Diminui o custo de modificar software
+
+* Faça um programa para ler um arquivo contendo várias triplas (nome, cpf, idade),
+  eh que diga se há algum cpf associado com nome ou idades diferentes.
+
+// Primeira tentativa
+//
+#include <map>
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  std::map<unsigned long, Pessoa> pessoas;
+  unsigned long cpf = 0;
+  unsigned short idade = 0;
+  std::string nome = "";
+  while (std::cin >> nome >> cpf >> idade) {
+    Pessoa p1(nome, cpf, idade);
+    if (pessoas.find(cpf) != pessoas.end()) {
+      std::cerr << "Chave presente " << cpf << std::endl;
+    } else {
+      pessoas[cpf] = p1;
+    }
+  }
+  for (const auto& [cpf, pessoa]: pessoas) {
+    std::cout << pessoa.to_string() << std::endl;
+  } 
+  return 0;
+}
+
+* Porque a primeira tentativa nos dá esse erro abaixo?
+  error: no matching constructor for initialization of 'Pessoa'
+
+* Como consertar o erro?
+- Precisamos criar um construtor default:
+
+class Pessoa {
+  public:
+    Pessoa(): _nome(""), _cpf(0), _idade(0) {}
+    ...
+};
+
+// If the only thing that the default construtor does is to initialize fields,
+// there is a syntax for it:
+    Pessoa() = default;
+
+* Crie uma classe 'Equipe', que armazene pessoas por CPF:
+
+* Antes de criarmos a classe, vamos pensar em quais testes poderíamos ter para
+  verificar o bom funcionamento dessa classe? Comece pensando em quais ações uma
+  equipe precaria saber fazer.
+
+#include <map>
+#include <iostream>
+#include "Pessoa.hpp"
+#include "Equipe.hpp"
+int main() {
+  Equipe equipe;
+  unsigned long cpf1 = 1000000;
+  unsigned long cpf2 = 1010101;
+  Pessoa p1("Fernando", cpf1, 20);
+  Pessoa p2("Fernando Quintao", cpf1, 20);
+  Pessoa p3("Giovanie", cpf2, 20);
+  // Testa insere e mostra:
+  //
+  equipe.insere_membro(p1);
+  equipe.insere_membro(p2);
+  equipe.insere_membro(p3);
+  equipe.mostra_membros();
+  // Testa contem:
+  //
+  if (equipe.contem_membro(cpf1)) {
+    std::cout << "A equipe contem o CPF " << cpf1 << std::endl;
+  }
+  if (!equipe.contem_membro(cpf1 + 1)) {
+    std::cout << "A equipe nao contem o CPF " << (cpf1 + 1) << std::endl;
+  }
+  // Testa remove:
+  //
+  equipe.remove_membro(cpf1);
+  equipe.mostra_membros();
+  return 0;
+}
+
+* Agora, declare as ações da equipe. Você não precisa passar nos testes ainda:
+
+#ifndef EQUIPE_H
+#define EQUIPE_H
+#include "Pessoa.hpp"
+class Equipe {
+  public:
+    void mostra_membros() const;
+    void insere_membro(Pessoa pessoa);
+    bool contem_membro(unsigned long cpf) const;
+    void remove_membro(unsigned long cpf);
+};
+#endif
+
+* Defina um arquivo contendo implementações para essa interface. Novamente, você
+  ainda não precisa passar nos testes:
+
+#include "Equipe.hpp"
+void Equipe::mostra_membros() const {}
+void Equipe::insere_membro(Pessoa pessoa) {}
+bool Equipe::contem_membro(unsigned long cpf) const {
+  return false;
+}   
+void Equipe::remove_membro(unsigned long cpf) {}
+
+* Agora, decida como serão armazenados os dados:
+
+#ifndef EQUIPE_H
+#define EQUIPE_H
+#include <map>
+#include "Pessoa.hpp"
+class Equipe {
+  public:
+    void mostra_membros() const;
+    void insere_membro(Pessoa pessoa);
+    bool contem_membro(unsigned long cpf) const;
+    void remove_membro(unsigned long cpf);
+  private:
+    std::map<unsigned long, Pessoa> _pessoas;
+};
+#endif
+
+* Faça uma implementação para esse tipo de dado. Comece com o método mostra_membro.
+  Como seria a implementação deste método?
+
+#include <iostream>
+#include "Equipe.hpp"
+void Equipe::mostra_membros() const {
+  for (const auto& [_, pessoa]: _pessoas) {
+    std::cout << pessoa.to_string() << std::endl;
+  }
+}
+
+* E como seria a implementação de insere_membro?
+
+void Equipe::insere_membro(Pessoa pessoa) {
+  _pessoas[pessoa.get_cpf()] = pessoa;
+}
+
+* Precisamos então definir o método get_cpf em Pessoa:
+
+class Pessoa {
+  public:
+    ...
+    unsigned long get_cpf() const {
+      return _cpf;
+    }
+    ...
+};
+
+* Neste momento, agora já conseguimos passar em alguns testes. Quais?
+
+* Vamos então implementar o método contem_membro?
+
+bool Equipe::contem_membro(unsigned long cpf) const {
+  return _pessoas.find(cpf) != _pessoas.end();
+}
+
+* Resta-nos então implementar o método remove_membro. Como seria esse código?
+
+void Equipe::remove_membro(unsigned long cpf) {
+  _pessoas.erase(cpf);
+}
+
+* E se a gente tentar apagar uma chave que não está na equipe? Não seria melhor dar
+  uma mensagem de erro?
+
+void Equipe::remove_membro(unsigned long cpf) {
+  if (contem_membro(cpf)) {
+    _pessoas.erase(cpf);
+  } else {
+    std::cerr << "Chave nao presente: " << cpf << std::endl;
+  } 
+}
