@@ -251,6 +251,8 @@ void Equipe::mostra_membros() const {
   }
 }
 
+* O que é o sublinha em "const auto& [_, pessoa]: _pessoas"?
+
 * E como seria a implementação de insere_membro?
 
 void Equipe::insere_membro(Pessoa pessoa) {
