@@ -9,7 +9,7 @@ O que podemos fazer para facilitar a tarefa de desenvolver software?
 Voces conhecem alguma tecnica para especificar um programa?
 
 Ja ouviram falar e user stories?
-"Enquanto <papel> quer ser capaz de <acao> de modo a <consequencia>"
+"Enquanto <papel> quero ser capaz de <acao> de modo a <consequencia>"
 
 Poderiam me dar um exemplo?
 "Enquanto:
@@ -103,6 +103,16 @@ Quais seriam as interações entre o calculador e o tokenizer, para implementar 
 5. Se próximo token for '-', então:
    5.a Calc pede a Tk para avançar próximo token
    5.b Calc invoka exp sobre Tk e subtrai o resultado a m
+
+Há alguma pré-condição que deve ser cumprida para que possamos calcular uma exp
+sobre um tokenizer?
+- A lista de tokens não pode ser vazia.
+- A lista de tokens deve seguir o formato de nossa gramática a partir do nó exp.
+
+E há alguma pós-condição que o cálculo de exp garante?
+- Se as pré-condições são válidas, então exp termina e produz um número.
+
+Nós acabamos de implementar um Caso de Uso. Você sabe o que é um caso de uso?
 
 Como implementar esse algoritmo?
 
