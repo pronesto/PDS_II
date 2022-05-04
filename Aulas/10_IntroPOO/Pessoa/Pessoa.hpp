@@ -2,11 +2,15 @@
 #define PESSOA_H
 
 #include <string>
+#include <cassert>
 
 class Pessoa {
   public:
     Pessoa(std::string nome, unsigned long cpf, unsigned char idade):
-      _nome(nome), _cpf(cpf), _idade(idade) {}
+      _nome(nome), _cpf(cpf), _idade(idade) {
+        assert(_cpf > 0);
+        assert(_idade > 0);
+    }
 
     std::string to_string() const;
 

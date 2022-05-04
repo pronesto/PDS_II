@@ -74,7 +74,7 @@ class Pessoa {
 // Arquivo .cpp:
 //
 #include "Pessoa.hpp"
-  std::string Pessoa::to_string() const {
+std::string Pessoa::to_string() const {
   return "";
 }
 void Pessoa::faz_aniversario() {}
@@ -91,6 +91,16 @@ bool Pessoa::mesma_pessoa(Pessoa &pessoa) const {
 * Nesse caso, como ficaria o metodo construtor?
     Pessoa(std::string nome, unsigned long cpf, unsigned short idade):
       _nome(nome), _cpf(cpf), _idade(idade) {}
+
+* Tem jeito de alguém ter CPF negativo? Ou idade negativa? Como lidar com isso?
+
+#include <cassert>
+...
+Pessoa(std::string nome, unsigned long cpf, unsigned char idade):
+  _nome(nome), _cpf(cpf), _idade(idade) {
+  assert(_cpf > 0);
+  assert(_idade > 0);
+}
 
 * E como seria a implementação de cada método?
 
