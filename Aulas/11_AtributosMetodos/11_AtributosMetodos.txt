@@ -1,0 +1,225 @@
+### Construtores: padrão e cópia
+
+* Vamos, pela infinitesima vez, criar Pontos! Qual é a interface de um Ponto?
+
+#include <string>
+class Point {
+  public:
+    Point(double xx, double yy): x(xx), y(yy) {}
+    void setX(double x) {
+      this->x = x;
+    }
+    void setY(double y) {
+      this->y = y;
+    }
+    std::string to_string() const {
+      return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+    }
+  private: 
+    double x, y;
+};
+
+* O que seria um teste para este programa?
+
+#include <iostream>
+#include "Point.hpp"
+void test0() {
+  Point p0(1.0, 3.14);
+  p0.setX(2.0);
+  std::cout << p0.to_string() << std::endl;
+}
+int main() {
+  test0();
+}
+
+* O código abaixo funcionaria?
+
+void setX(double x) {
+  x = x;
+}
+
+* Você poderia explicar o comportamento do código acima?
+
+* E o teste abaixo, porque não é possível passar nele?
+
+void test1() {
+  Point p0;
+  p0.setX(2.0);
+  std::cout << p0.to_string() << std::endl;
+}
+
+* O que seria a inicialização padrão de um ponto?
+...
+Point(): Point(0.0, 0.0) {}
+...
+
+* A inicialização de doubles com 0.0 é padrão. Podemos simplificar nosso ctor:
+...
+Point() = default;
+...
+
+* O que significa essa chamada de um construtor na lista de inicialização de
+  outro construtor?
+
+* Você conseguiria arranjar nossos testes para podermos chamar aquele que quisermos?
+
+int main() {
+  int option = 0;
+  std::cin >> option;
+  switch(option) {
+    case 0:
+      test0();
+      break;
+    case 1:
+      test1();
+      break;
+    default:
+      std::cerr << "Opcao invalida: " << option << std::endl;
+  }
+}
+
+* Será que poderíamos definir uma forma de copiar um ponto em outro?
+
+* Como seria o caso de teste?
+
+void test2() {
+  Point p0(1.0, 3.14);
+  Point p1;
+  p1.clone(p0);
+  std::cout << p1.to_string() << std::endl;
+}
+
+* E como seria o método de cópia?
+
+void clone(const Point& p) {
+  x = p.x;
+  y = p.y;
+}
+
+* O que significa essa assinatura "const Point&"?
+
+* Existe um construtor especial chamado construtor de cópia. Sabe o que é isso?
+
+Point(const Point& p) {
+  x = p.x;
+  y = p.y;
+}
+
+* Como testar o código acima?
+
+void test3() {
+  Point p0(1.0, 3.14);
+  Point p1(p0);
+  std::cout << p1.to_string() << std::endl;
+}
+
+* Tem como saber quantos pontos foram criados em qualquer momento do programa?
+
+* Como você poderia implementar isso?
+
+### Variáveis Estáticas
+
+* O que é uma variável estática?
+
+#ifndef POINT_H
+#define POINT_H
+class Point {
+  public:
+    Point(double xx, double yy): x(xx), y(yy) {}
+    Point(): Point(0.0, 0.0) {}
+    // ...
+  private:
+    static unsigned num_points; ///< Declaracao da variavel estatica.
+    double x, y;
+}
+unsigned Point::num_points = 0; ///< Definicao da variavel estatica.
+#endif
+
+* Qual é a diferença entre declaraçao e definição?
+
+* Como incrementar a variável estática sempre que um ponto for criado?
+
+#ifndef POINT_H
+#define POINT_H
+class Point {
+  public:
+    Point(double xx, double yy): x(xx), y(yy) {
+      num_points++;
+    }
+    Point(): Point(0.0, 0.0) {}
+    // ...
+  private:
+    static unsigned num_points; ///< Variavel estatica!
+    double x, y;
+}
+#endif
+
+* Porque não é preciso incrementar a variável dentro do construtor padrão?
+
+* Como recuperar o valor da variável estática?
+
+#ifndef POINT_H
+#define POINT_H
+class Point {
+  public:
+    Point(double xx, double yy): x(xx), y(yy) {}
+    Point(): Point(0.0, 0.0) {}
+    // ...
+    static unsigned get_num_points() {
+      return num_points;
+    }
+  private:
+    static unsigned num_points; ///< Declaracao da variavel estatica.
+    double x, y;
+}
+unsigned Point::num_points = 0; ///< Definicao da variavel estatica.
+#endif
+
+* O que seria um teste para esse programa?
+
+void test4() {
+  Point p0(1.0, 3.14);
+  Point p1(1.61, 2.76);
+  Point p2;
+  Point p3(p0);
+  assert(Point::get_num_points() == 4);
+}
+
+* São realmente quatro pontos que estamos esperando obter?
+
+* O que aconteceu de errado?
+
+class Point {
+  public:
+    // Precisamos usar sempre construtores que incrementam a quantidade de pontos:
+    //
+    Point(double xx, double yy): x(xx), y(yy) {
+      num_points++;
+    }
+    Point(const Point& p): Point(p.x, p.y) {}
+    Point(): Point(0.0, 0.0) {}
+    ...
+}
+
+* O que aconteceria nesse teste?
+
+void test0() {
+  Point p0(1.0, 3.14);
+  p0.setX(2.0);
+  std::cout << p0.to_string() << std::endl;
+}
+
+void test4() {
+  Point p0(1.0, 3.14);
+  Point p1(1.61, 2.76);
+  Point p2;
+  Point p3(p0);
+  assert(Point::get_num_points() == 4);
+}
+
+void test5() {
+  test0();
+  test4();
+}
+
+* Como lidar com isso?
