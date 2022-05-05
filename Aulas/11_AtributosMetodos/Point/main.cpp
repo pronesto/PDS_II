@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Point.hpp"
+#include "Segment.hpp"
 
 void test0() {
   Point p0(1.0, 3.14);
@@ -40,6 +41,27 @@ void test5() {
   test4();
 }
 
+void test6() {
+  Point *p0 = new Point(1.0, 3.14);
+  Point *p1 = new Point(1.61, 2.76);
+  Point *p2 = p1;
+  std::cout << p0->to_string() << std::endl;
+  std::cout << p1->to_string() << std::endl;
+  std::cout << p2->to_string() << std::endl;
+}
+
+void test7() {
+  Point p0(1.0, 1.0);
+  Point p1(2.0, 1.0);
+  assert(Point::distance(&p0, &p1) == 1.0);
+}
+
+void test8() {
+  Segment s(1.0, 1.0, 2.0, 1.0);
+  assert(s.length() == 1.0);
+  std::cout << s.to_string() << std::endl;
+}
+
 int main() {
   int option = 0;
   std::cin >> option;
@@ -61,6 +83,15 @@ int main() {
       break;
     case 5:
       test5();
+      break;
+    case 6:
+      test6();
+      break;
+    case 7:
+      test7();
+      break;
+    case 8:
+      test7();
       break;
     default:
       std::cerr << "Opcao invalida: " << option << std::endl;

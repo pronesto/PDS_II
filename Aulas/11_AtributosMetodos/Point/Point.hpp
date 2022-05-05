@@ -1,6 +1,7 @@
 #ifndef POINT_H
 #define POINT_H
 
+#include <cmath>
 #include <string>
 
 class Point {
@@ -14,6 +15,10 @@ class Point {
       x = p.x;
       y = p.y;
     }
+    ~Point() {
+      std::cout << "Destrutor\n";
+      num_points--;
+    }
     void setX(double x) {
       this->x = x;
     }
@@ -25,6 +30,11 @@ class Point {
     }
     static unsigned get_num_points() {
       return num_points;
+    }
+    static double distance(Point *p1, Point *p2) {
+      double x = p1->x - p2->x;
+      double y = p1->y - p2->y;
+      return sqrt(x*x + y*y);
     }
   private:
     static unsigned num_points;

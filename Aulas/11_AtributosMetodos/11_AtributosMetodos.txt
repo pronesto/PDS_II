@@ -117,7 +117,7 @@ void test3() {
 
 * Como você poderia implementar isso?
 
-### Variáveis Estáticas
+### Variáveis e Métodos Estáticos
 
 * O que é uma variável estática?
 
@@ -201,6 +201,23 @@ class Point {
     ...
 }
 
+* Defina um teste para testar a distância entre dois pontos:
+
+void test7() {
+  Point p0(1.0, 1.0);
+  Point p1(2.0, 1.0);
+  assert(Point::distance(&p0, &p1) == 1.0);
+}
+
+* Agora, crie um método estático em Point para medir a distância entre dois pontos:
+
+#include <cmath>
+static double distance(Point *p1, Point *p2) {
+  double x = p1->x - p2->x;
+  double y = p1->y - p2->y;
+  return sqrt(x*x + y*y);
+}
+
 * O que aconteceria nesse teste?
 
 void test0() {
@@ -223,3 +240,118 @@ void test5() {
 }
 
 * Como lidar com isso?
+
+### Destrutores
+
+* Vocês já ouviram falar de destrutores?
+
+class Point {
+  public:
+    ~Point() {
+      num_points--;
+    }
+    // ...
+  private:
+    static unsigned num_points;
+    // ...
+};
+
+* Quando um objeto é destruído?
+
+* Quando o objeto p0 será destruído?
+
+void test0() {
+  Point p0(1.0, 3.14);
+  p0.setX(2.0);
+  std::cout << p0.to_string() << std::endl;
+}
+
+* E os objetos p0, p1 e p2, quando eles serão destruídos?
+
+void test6() {
+  Point *p0 = new Point(1.0, 3.14);
+  Point *p1 = new Point(1.61, 2.76);
+  Point *p2 = p1;
+  std::cout << p0->to_string() << std::endl;
+  std::cout << p1->to_string() << std::endl;
+  std::cout << p2->to_string() << std::endl;
+}
+
+* Como destruir objetos criados no Heap?
+
+void test6() {
+  Point *p0 = new Point(1.0, 3.14);
+  Point *p1 = new Point(1.61, 2.76);
+  Point *p2 = p1;
+  std::cout << p0->to_string() << std::endl;
+  std::cout << p1->to_string() << std::endl;
+  std::cout << p2->to_string() << std::endl;
+  delete p0;
+  delete p1;
+}
+
+* E se tentássemos destruir p2, igual no código abaixo?
+
+void test6() {
+  Point *p0 = new Point(1.0, 3.14);
+  Point *p1 = new Point(1.61, 2.76);
+  Point *p2 = p1;
+  std::cout << p0->to_string() << std::endl;
+  std::cout << p1->to_string() << std::endl;
+  std::cout << p2->to_string() << std::endl;
+  delete p0;
+  delete p1;
+  delete p2;
+}
+
+* Para que serve o destrutor?
+- Para liberar recursos!
+
+* Crie uma classe Segment, que represente um segmento de reta, formado por dois
+  pontos.
+
+* Qual deveria ser a interface do segmento?
+
+#ifndef SEGMENT_H
+#define SEGMENT_H
+class Segment {
+  public:
+    ...
+    std::string to_string() const;
+    double length() const;
+};
+#endif
+
+* Implemente esse TAD, adicionando um construtor para criar os pontos:
+
+#ifndef SEGMENT_H
+#define SEGMENT_H
+#include "Point.hpp"
+class Segment {
+  public:
+    Segment(double x0, double y0, double x1, double y1) {
+      _p0 = new Point(x0, y0);
+      _p1 = new Point(x1, y1);
+    }
+    std::string to_string() const {
+      return _p0->to_string() + " -> " + _p1->to_string();
+    }
+    double length() const {
+      return Point::distance(_p0, _p1);
+    }
+  private:
+    Point *_p0, *_p1;
+};
+#endif
+
+* Essa classe irá criar um vazamento de memória. Por que?
+
+class Segment {
+  public:
+    ...
+    ~Segment() {
+      delete _p0;
+      delete _p1;
+    }
+    ...
+};
