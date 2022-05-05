@@ -31,9 +31,9 @@ class Point {
     static unsigned get_num_points() {
       return num_points;
     }
-    static double distance(Point *p1, Point *p2) {
-      double x = p1->x - p2->x;
-      double y = p1->y - p2->y;
+    static double distance(const Point &p1, const Point &p2) {
+      double x = p1.x - p2.x;
+      double y = p1.y - p2.y;
       return sqrt(x*x + y*y);
     }
   private:

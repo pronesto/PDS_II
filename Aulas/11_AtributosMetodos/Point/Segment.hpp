@@ -17,10 +17,10 @@ class Segment {
       return _p0->to_string() + " -> " + _p1->to_string();
     }
     double length() const {
-      return Point::distance(_p0, _p1);
+      return Point::distance(*_p0, *_p1);
     }
   private:
-    Point *_p0, *_p1;
+    const Point *_p0, *_p1;
 };
 
 #endif

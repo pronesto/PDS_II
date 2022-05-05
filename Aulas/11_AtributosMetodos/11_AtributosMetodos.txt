@@ -355,3 +355,22 @@ class Segment {
     }
     ...
 };
+
+* Imagine que Point::distance fosse definida assim:
+static double distance(const Point &p1, const Point &p2) {
+  double x = p1.x - p2.x;
+  double y = p1.y - p2.y;
+  return sqrt(x*x + y*y);
+}
+
+Nesse caso, como Point::distance poderia ser usada em Segment?
+double length() const {
+  return Point::distance(*_p0, *_p1);
+}
+
+* Seria possível declarar os Pontos como constantes em Segment?
+// Sure!
+class Segment {
+  private:
+    const Point *_p0, *_p1;
+};

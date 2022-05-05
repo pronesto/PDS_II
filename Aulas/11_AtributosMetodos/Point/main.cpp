@@ -53,7 +53,7 @@ void test6() {
 void test7() {
   Point p0(1.0, 1.0);
   Point p1(2.0, 1.0);
-  assert(Point::distance(&p0, &p1) == 1.0);
+  assert(Point::distance(p0, p1) == 1.0);
 }
 
 void test8() {
