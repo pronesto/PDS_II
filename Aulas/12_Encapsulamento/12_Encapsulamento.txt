@@ -1,0 +1,180 @@
+### Passagem de objetos como parâmetros:
+
+* Recap: o que são construtores e destrutores?
+
+* O que será impresso por este programa?
+
+#include <iostream>
+class C {
+  public:
+    C(int xx): x(xx) {
+      std::cout << "Criando objeto C com valor " << x << std::endl;
+    }
+    ~C() {
+      std::cout << "Destruindo objeto C com valor " << x << std::endl;
+    }
+    int x;
+};
+int main() {
+  C c0(0);
+  int x = 0;
+  std::cin >> x;
+  if (x) {
+    std::cout << "Entrando no if\n";
+    C c1(1);
+    std::cout << "Saindo do if\n";
+  }
+  std::cout << "Fora do if\n";
+  return 0;
+}
+
+* E este programa, o que ele imprime?
+
+int main() {
+  C c0(0);
+  C *c2 = new C(2);
+  int x = 0;
+  std::cin >> x;
+  if (x) {
+    std::cout << "Entrando no if\n";
+    C c1(1);
+    std::cout << "Saindo do if\n";
+  }
+  std::cout << "Fora do if\n";
+  return 0;
+}
+
+* O programa acima possui um vazamento de memória?
+
+* Como evitar o vazamento de memória?
+
+int main() {
+  C c0(0);
+  C *c2 = new C(2);
+  int x = 0;
+  std::cin >> x;
+  if (x) {
+    std::cout << "Entrando no if\n";
+    C c1(1);
+    std::cout << "Saindo do if\n";
+  }
+  std::cout << "Fora do if\n";
+  delete c2;
+  return 0;
+}
+
+* O que imprime o programa abaixo?
+
+void foo() {
+  C c3(3);
+}
+int main() {
+  C c0(0);
+  foo();
+  return 0;
+}
+
+* Como criar um objeto em uma função e o retornar?
+
+* O programa abaixo está correto? O que ele deve imprimir?
+
+C* bar() {
+  C c4(4);
+  return &c4;
+}
+int main() {
+  C *c5 = bar();
+  std::cout << "Depois da chamada: " << c5->x << std::endl;
+  return 0;
+}
+
+* E o programa abaixo, o que acontecerá se o executarmos?
+
+C* bar() {
+  C c4(4);
+  return &c4;
+}
+int main() {
+  C *c5 = bar();
+  std::cout << "Depois da chamada: " << c5->x << std::endl;
+  delete c5;
+  return 0;
+}
+
+* Como retornar um objeto a partir de uma função?
+
+C* bar() {
+  C *c4 = new C(4);
+  return c4;
+}
+int main() {
+  C *c5 = bar();
+  std::cout << "Depois da chamada: " << c5->x << std::endl;
+  delete c5;
+  return 0;
+}
+
+* E o programa abaixo, o que ele imprime?
+
+void baz(C c) {
+  std::cout << "Dentro de baz: " << c.x << std::endl; 
+}
+int main() {
+  C c6(6);
+  baz(c6);
+  std::cout << "Depois que baz retorna\n";
+  return 0;
+}
+
+* Como é possível que ele imprima que "Criando" somente uma vez, e imprima "Destruindo" duas vezes?
+
+* Vocês já ouviram falar do construtor de cópia? Ele existe por padrão em qualquer
+objeto C++, mas nós podemos sobre-escrever o ctor padrão:
+
+class C {
+  public:
+    C(const C &c): x(c.x) {
+      std::cout << "Criando [Copy Ctor] objeto C com valor " << x << std::endl;
+    }
+    C(int xx): x(xx) {
+      std::cout << "Criando objeto C com valor " << x << std::endl;
+    }
+    ~C() {
+      std::cout << "Destruindo objeto C com valor " << x << std::endl;
+    }
+    int x;
+};
+void baz(C c) {
+  std::cout << "Dentro de baz: " << c.x << std::endl; 
+}
+int main() {
+  C c6(6);
+  baz(c6);
+  std::cout << "Depois que baz retorna\n";
+  return 0;
+}
+
+* Se quisermos impedir as cópias, o que podemos fazer?
+
+void goo(C &c) {
+  std::cout << "Dentro de goo\n";
+}
+int main() {
+  C c6(6);
+  goo(c6);
+  std::cout << "Depois que goo retorna\n";
+  return 0;
+}
+
+* E se passássemos um ponteiro para o objeto?
+// Obteríamos o mesmo efeito:
+//
+void goo(C *c) {
+  std::cout << "Dentro de goo\n";
+}
+int main() {
+  C c6(6);
+  goo(&c6);
+  std::cout << "Depois que goo retorna\n";
+  return 0;
+}
