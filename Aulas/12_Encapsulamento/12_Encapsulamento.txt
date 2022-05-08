@@ -178,3 +178,255 @@ int main() {
   std::cout << "Depois que goo retorna\n";
   return 0;
 }
+
+### Accessors
+
+* Escreva um teste para verificar uma classe que representa pessoas:
+
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  Pessoa p("Fernando", 99999999999, 120);
+  assert(p.nome == "Fernando");
+  assert(p.cpf == 99999999999);
+  assert(p.idade == 120);
+  std::cout << p.to_string() << std::endl;
+}
+
+* Nesse caso, os atributos são públicos. Como seria a implementação da classe?
+
+#ifndef PESSOA_H
+#define PESSOA_H
+class Pessoa {
+  public:
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      nome(n), cpf(c), idade(i) {
+    }
+    std::string to_string() const {
+      return "Nome: " + nome
+        + ", CPF: " + std::to_string(cpf)
+        + ", Idade: " + std::to_string(idade);
+    }
+    // Os atributos de objetos da classe são publicos. Assim, o proprio nome do
+    //  atributo dah acesso a ele:
+    //
+    std::string nome;
+    unsigned long cpf;
+    unsigned short idade;
+};
+#endif
+
+* Divida a classe acima em um arquivo .cpp e um arquivo .hpp
+
+// Arquivo hpp:
+//
+#ifndef PESSOA_H
+#define PESSOA_H
+#include <string>
+class Pessoa {
+  public:
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      nome(n), cpf(c), idade(i) {
+    }
+    std::string to_string() const;
+    std::string nome;
+    unsigned long cpf;
+    unsigned short idade;
+};
+#endif
+
+// Arquivo cpp:
+//
+#include "Pessoa.hpp"
+std::string Pessoa::to_string() const {
+  return "Nome: " + nome
+    + ", CPF: " + std::to_string(cpf)
+    + ", Idade: " + std::to_string(idade);
+}
+
+* Discuta as vantagens e desvantagens de termos atributos públicos.
+
+* Modifique os atributos, para que passem a ser todos privados.
+
+#ifndef PESSOA_H
+#define PESSOA_H
+#include <string>
+class Pessoa {
+  public:
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      _nome(n), _cpf(c), _idade(i) {
+    }
+    std::string to_string() const;
+  private:
+    std::string _nome;
+    unsigned long _cpf;
+    unsigned short _idade;
+};
+#endif
+
+* Modifique o programa para que ainda seja possível passar nos testes de main.
+
+// Novo arquivo main:
+//
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  Pessoa p("Fernando", 99999999999, 120);
+  assert(p.getNome() == "Fernando");
+  assert(p.getCPF() == 99999999999);
+  assert(p.getIdade() == 120);
+  std::cout << p.to_string() << std::endl;
+}
+
+// Nova classe Pessoa:
+//
+class Pessoa {
+  public:
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      _nome(n), _cpf(c), _idade(i) {
+    }
+    std::string to_string() const;
+    std::string getNome() const { return _nome; }
+    unsigned long getCPF() const { return _cpf; }
+    unsigned short getIdade() const { return _idade; }
+  private:
+    std::string _nome;
+    unsigned long _cpf;
+    unsigned short _idade;
+};
+
+* Adicione uma forma de verificar se a idade de uma pessoa é válida.
+
+class Pessoa {
+  ...
+  private:
+    ...
+    unsigned short _idade;
+    bool idade_valida() const {
+      return _idade <= 120;
+    }
+};
+
+* Você poderia usar esse método para assegurar que somente objetos com idade
+  válida possam ser criados?
+
+#include <cassert>
+class Pessoa {
+  public:
+    ...
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      _nome(n), _cpf(c), _idade(i) {
+        assert(idade_valida());
+    }
+  private:
+    ...
+    unsigned short _idade;
+    bool idade_valida() const {
+      return _idade <= 120;
+    }
+};
+
+* Adicione um método para modificar a idade de uma pessoa. Como a idade poderia ser
+modificada?
+
+class Pessoa {
+  public:
+    ...
+    void faz_aniversario() {
+      _idade++;
+      assert(idade_valida());
+    }
+    ...
+}
+
+* Escreva um teste para ver o que acontece quando a idade de uma pessoa passa de 120
+
+#include "Pessoa.hpp"
+int main() {
+  Pessoa p("Fernando", 99999999999, 120);
+  p.faz_aniversario();
+}
+
+* O que é um CPF válido?
+
+* Escreva um teste para verificar se um CPF é valido:
+
+// Arquivo hpp:
+//
+#include <cassert>
+class Pessoa {
+  public:
+    ...
+    Pessoa(std::string n, unsigned long c, unsigned short i):
+      _nome(n), _cpf(c), _idade(i) {
+        assert(idade_valida());
+        assert(cpf_valido());
+    }
+  private:
+    ...
+    unsigned short _cpf;
+    bool cpf_valido() const;
+};
+
+// Arquivo cpp:
+//
+bool Pessoa::cpf_valido() const {
+  if (_cpf > 99999999999) {
+    return false;
+  }
+  std::string digits = std::to_string(_cpf);
+  unsigned int sum = 0;
+  for (char dig: digits) {
+    sum += (dig - '0');
+  }
+  if (sum / 10 != sum % 10) {
+    return false;
+  }
+  return true;
+}
+
+* Você poderia fazer um programa para testar se a verificacao de CPF funciona?
+
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  // CPFs validos:
+  //
+  Pessoa p0("Fernando", 24548079041, 12);
+  Pessoa p1("Miocolis", 26350524098, 12);
+  Pessoa p2("Piomolho", 62497041083, 12);
+  // CPF invalido:
+  //
+  Pessoa p3("Piomolho", 1000, 12);
+}
+
+* Você poderia fazer uma função para modificar o CPF de uma pessoa?
+
+class Pessoa {
+  public:
+    ...
+    void set_CPF(unsigned long cpf) {
+      _cpf = cpf;
+      assert(cpf_valido());
+    }
+    ...
+};
+
+* E um código para testar set_CPF?
+
+int main() {
+  // CPFs validos:
+  //
+  Pessoa p0("Fernando", 24548079041, 12);
+  Pessoa p1("Miocolis", 26350524098, 12);
+  Pessoa p2("Piomolho", 62497041083, 12);
+  // CPF invalido:
+  //
+  p1.set_CPF(24548079041);
+  p2.set_CPF(26350524098);
+  p0.set_CPF(62497041083);
+}
+
+* Alguns métodos de Pessoa foram implementados diretamente no arquivo cabeçalho.
+Quando devemos usar um arquivo cpp para essas implementações?
+- O Arquivo cabeçalho é também documentação!
