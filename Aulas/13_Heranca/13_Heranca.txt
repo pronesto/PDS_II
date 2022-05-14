@@ -1,0 +1,264 @@
+### Herança Simples
+
+* O que é reúso de código?
+
+* Quais técnicas de reúso nós conhecemos?
+
+* Vocês já ouviram falar de herança?
+- É uma técnica de reúso de código!
+
+* Para demonstrar como essa técnica funciona, vamos criar novamente o TAD Pessoa:
+
+class Pessoa {
+  public:
+    Pessoa(std::string nome, unsigned long cpf): _nome(nome), _cpf(cpf) {}
+    std::string to_string() const {
+      return "Nome = " + _nome + ", CPF = " + std::to_string(_cpf);
+    }
+    unsigned long get_cpf() const {
+      return _cpf;
+    }
+  private:
+    std::string _nome;
+    const unsigned _cpf;
+};
+
+* Você poderia criar um programa para testar esse TAD?
+
+#include <iostream>
+#include "Pessoa.hpp"
+int main() {
+  Pessoa p("Fernando", 356372);
+  std::cout << p.to_string() << std::endl;
+}
+
+* Agora, vamos criar um TAD "Assalariado", isso é, uma pessoa que possui salário.
+  Como isso poderia ser feito?
+
+* Uma forma seria replicar bastante informação já disponível na classe Pessoa:
+
+class Assalariado {
+  public:
+    Assalariado(std::string nome, unsigned long cpf, double salario):
+      _nome(nome), _cpf(cpf), _salario(salario) {}
+    double get_salario() {
+      return _salario;
+    }
+    void aumenta_salario(double factor) {
+      _salario += _salario * factor;
+    }
+    std::string to_string() const {
+      return "Nome = " + _nome + ", CPF = " + std::to_string(_cpf) +
+        ", Salario = " + std::to_string(_salario);
+    }
+    unsigned long get_cpf() const {
+      return _cpf;
+    }
+  private:
+    double _salario;
+    std::string _nome;
+    const unsigned _cpf;
+};
+
+* Quais redundâncias de código existem entre Pessoa e Assalariado?
+
+* Vocês já ouviram falar de um princípio de programação chamado "Don't Repeat
+  Yourself (DRY)"?
+
+* O projeto da classe assalariado fere esse princípio. Porque?
+
+* Esse mesmo código poderia ser feito via herança:
+
+class Assalariado: public Pessoa {
+  public:
+    Assalariado(std::string nome, unsigned long cpf, double salario):
+      Pessoa(nome, cpf), _salario(salario) {}
+    double get_salario() const {
+      return _salario;
+    }
+    void aumenta_salario(double factor) {
+      _salario += _salario * factor;
+    }
+    std::string to_string() const {
+      return Pessoa::to_string() + ", Salario = " + std::to_string(_salario);
+    }
+  private:
+    double _salario;
+};
+
+* Como podemos testar esse código?
+
+void test0() {
+  Pessoa p("Fernando", 356372);
+  Assalariado a("Princas", 823746, 4543.03);
+  std::cout << p.to_string() << std::endl;
+  std::cout << a.to_string() << std::endl;
+}
+int main() {
+  int option = 0;
+  std::cin >> option;
+  switch (option) {
+    case 0:
+      test0();
+      break;
+    default:
+      std::cerr << "Opcao invalida: " << option << std::endl;
+  }
+  return 0;
+}
+
+* O que aconteceria se removêssemos o método to_string() da classe Assalariado?
+
+* Vamos adicionar um atributo idade à Pessoa, de modo que o salário base de um assalariado seja sempre aumentado por sua idade * 100.00. O primeiro passo é adicionar _idade à Pessoa:
+
+class Pessoa {
+  public:
+    ...
+    void set_idade(unsigned long idade) {
+      _idade = idade;
+    }
+  private:
+    ...
+    unsigned short _idade;
+};
+
+* Como podemos então modificar a classe Assalariado, para que o salário seja o salário base mais idade * 100?
+
+class Pessoa {
+  public:
+    ...
+    void set_idade(unsigned long idade) {
+      _idade = idade;
+    }
+  protected:
+    ...
+    unsigned short _idade;
+};
+class Assalariado: public Pessoa {
+  public:
+    Assalariado(std::string nome, unsigned long cpf, double salario):
+      Pessoa(nome, cpf), _salario(salario) {}
+    double get_salario() const {
+      return _salario + _idade * 100.0;
+    }
+    void aumenta_salario(double factor) {
+      _salario += _salario * factor;
+    }
+    std::string to_string() const {
+      return Pessoa::to_string() + ", Salario = " + std::to_string(get_salario());
+    }
+  private:
+    double _salario;
+};
+
+* Qual o modificador de acesso mais restritivo: private ou protected?
+
+* Qual é a ordem em que os construtores da classe e da superclasse são chamados?
+
+class Pessoa {
+  public:
+    Pessoa(std::string nome, unsigned long cpf): _nome(nome), _cpf(cpf) {
+      std::cout << "Pessoa(" << _cpf << ", cpf)\n";
+    }
+};
+class Assalariado: public Pessoa {
+  public:
+    Assalariado(std::string nome, unsigned long cpf, double salario):
+      Pessoa(nome, cpf), _salario(salario) {
+        std::cout << "Assalariado(nome, " << get_cpf() << ", salario)\n";
+      }
+};
+
+* E quanto a destrutores, como descobrir a ordem em que são chamados?
+
+class Pessoa {
+  public:
+    ...
+    ~Pessoa() {
+      std::cout << "~Pessoa(" << _cpf << ")\n";
+    }
+};
+class Assalariado: public Pessoa {
+    ...
+    ~Assalariado() {
+      std::cout << "~Assalariado(" << get_cpf() << ")\n";
+    }
+};
+
+### Herança Múltipla
+
+* Vamos criar a classe "Localizavel", das coisas que possuem endereço?
+
+#ifndef LOCALIZAVEL_H
+#define LOCALIZAVEL_H
+class Localizavel {
+  public:
+    Localizavel(std::string logr, unsigned short numero, unsigned int cep):
+      _logradouro(logr), _numero(numero), _cep(cep) {}
+
+    std::string to_string() const {
+      return _logradouro + ", " + std::to_string(_numero) + ", CEP: " +
+        std::to_string(_cep);
+    }
+
+    static const unsigned int MAIOR_CEP;
+  private:
+    std::string _logradouro;
+    unsigned short _numero;
+    unsigned int _cep;
+};
+const unsigned int Localizavel::MAIOR_CEP = 90000000;
+#endif
+
+* Escreva um teste para verificar se objetos Localizáveis estão sendo impressos
+  corretamente:
+
+void test2() {
+  Localizavel l0("Rua dos Bobos", 0, 33418021);
+  std::cout << l0.to_string() << std::endl;
+}
+
+* Escreva um teste para imprimir o maior CEP de um objeto localizável:
+
+void test3() { 
+  std::cout << std::to_string(Localizavel::MAIOR_CEP) << std::endl;
+}
+
+* Como saber se um CEP pertence a Minas Gerais?
+
+bool eh_em_Minas_Gerais() const {
+  return _cep >= 30000000 && _cep <= 39999999;
+}
+
+* Escreva uma classe Empregado. Empregados têm salário e endereço fixo.
+
+class Empregado: public Assalariado, Localizavel {
+  public:
+    Empregado(std::string nome, unsigned long cpf, double salario,
+        std::string logr, unsigned short numero, unsigned int cep):
+      Assalariado(nome, cpf, salario), Localizavel(logr, numero, cep) {}
+      
+    std::string to_string() const {
+      return Assalariado::to_string() + ", Endereco: " +
+        Localizavel::to_string();
+    } 
+};
+
+* Escreva um teste para verificar se o empregado funciona corretamente:
+
+void test4() {
+  Empregado e("Gualberto", 24443736000, 2300, "Rua dos bobos", 130, 31240901);
+  std::cout << e.to_string() << std::endl;
+}
+
+* O que ocorreria se removêssemos a definição de to_string da classe Empregado?
+
+* Em que ordem são chamados os construtores e destrutores de Empregado?
+
+* Você consegue definir um algoritmo para saber essa ordem?
+
+* E se mudássemos a declaração de Empregado para:
+class Empregado: public Localizavel, Assalariado {...}
+
+* São poucas as linguagens de programação que suportam herança múltipla. Quais as
+desvantagens da herança múltipla?
