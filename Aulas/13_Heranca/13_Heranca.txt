@@ -237,7 +237,7 @@ bool eh_em_Minas_Gerais() const {
 
 * Escreva uma classe Empregado. Empregados têm salário e endereço fixo.
 
-class Empregado: public Assalariado, Localizavel {
+class Empregado: public Assalariado, public Localizavel {
   public:
     Empregado(std::string nome, unsigned long cpf, double salario,
         std::string logr, unsigned short numero, unsigned int cep):
