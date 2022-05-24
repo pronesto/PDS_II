@@ -1,0 +1,401 @@
+* Como comem os animais?
+
+* Caso tivéssemos de modelar esse comportamento de animais, como faríamos?
+
+* Implemente a classe Animal, com a capacidade de "comer":
+
+#ifndef ANIMAL_H
+#define ANIMAL_H
+#include <iostream>
+class Animal {
+  const std::string _nome;
+  public:
+    Animal(std::string nome): _nome(nome) {}
+    virtual void come() const {
+      std::cout << "O animal " << _nome << " come de algum jeito indefinido\n";
+    }
+    std::string get_nome() const {
+      return _nome;
+    } 
+};
+#endif
+
+* Agora, implemente uma função "alimenta_os_animais" que invoque 'come' sobre um vetor de ponteiros para animais:
+
+void alimenta_os_animais(std::vector<Animal*> &vec) {
+  for (Animal* a: vec) {
+    a->come();
+  } 
+}
+
+* Como poderíamos testar essa função?
+
+int main() {
+  std::vector<Animal*> v;
+  v.push_back(new Animal("Sirigueijo"));
+  v.push_back(new Animal("Tigrinho"));
+  alimenta_os_animais(v);
+}
+
+* Vamos então criar uma especialização de Animal chamada Mamífero?
+
+class Mamifero: public Animal {
+  public:
+    Mamifero(std::string nome): Animal(nome) {}
+    void come() const {
+      std::cout << "O mamifero " << get_nome() << " come mamando\n";
+    }
+};
+
+* O que será que imprime o teste abaixo?
+
+int main() {
+  std::vector<Animal*> v;
+  v.push_back(new Animal("Sirigueijo"));
+  v.push_back(new Mamifero("Tigrinho"));
+  alimenta_os_animais(v);
+}
+
+* O que você acha que seria interessante imprimir?
+
+* E como poderíamos fazer com que o segundo animal comesse como um mamífero?
+
+class Animal {
+  public:
+    ...
+    virtual void come() const {
+      std::cout << "O animal " << _nome << " come de algum jeito indefinido\n";
+    }
+    ...
+};
+
+* Essa palavra 'virtual' faz toda a diferença. O que ela faz?
+
+* Por que é possível colocar um Mamífero em um vetor de Animais?
+
+* Seria possível fazer isso se a herança não fosse pública, isto é:
+class Mamifero: /* public */ Animal { ... }
+
+* Agora escreva uma classe Cachorro, que especializa Mamifero:
+
+class Cachorro: public Mamifero {
+  public:
+    Cachorro(std::string nome): Mamifero(nome) {}
+    void come() const {
+      std::cout << "O cachorro " << get_nome() << " come latindo\n";
+    }
+};
+
+* Modifique nosso teste para que ele use também instâncias de cachorro. O que será
+impresso?
+
+int main() {
+  std::vector<Animal*> v;
+  v.push_back(new Animal("Sirigueijo"));
+  v.push_back(new Mamifero("Tigrinho"));
+  v.push_back(new Cachorro("Marshall"));
+  alimenta_os_animais(v);
+}
+
+* Agora, diga o que será impresso em cada um dos três testes:
+
+void alimenta_o_animal(Animal* a) {
+  a->come();
+}
+
+int main() {
+  Animal *a0 = new Animal("Sirigueijo");
+  Animal *a1 = new Mamifero("Tigrinho");
+  Animal *a2 = new Cachorro("Marshall");
+  alimenta_o_animal(a0);
+  alimenta_o_animal(a1);
+  alimenta_o_animal(a2);
+}
+
+* E nesse caso abaixo, o que será impresso?
+
+void alimenta_o_mamifero(Mamifero* m) {
+  m->come();
+}
+
+int main() {
+  Mamifero * m0 = new Mamifero("Tigrinho");
+  Mamifero * m1 = new Cachorro("Marshall");
+  alimenta_o_mamifero(m0);
+  alimenta_o_mamifero(m1);
+}
+
+* E nesse caso abaixo, o programa compila?
+
+int main() {
+  Animal * m0 = new Mamifero("Tigrinho");
+}
+
+* E esse programa abaixo, ele compila? Porque?
+
+void alimenta_o_mamifero(Mamifero* m) {
+  m->come();
+}
+int main() {
+  Animal * m0 = new Mamifero("Tigrinho");
+  alimenta_o_mamifero(m0);
+}
+
+* Qual é a regra para atribuir um objeto a outro?
+
+* Há alguma coisa que um mamífero faça que um animal não faça?
+
+class Mamifero: public Animal {
+  public:
+    Mamifero(std::string nome): Animal(nome) {}
+    void come() const {
+      std::cout << "O mamifero " << get_nome() << " come mamando\n";
+    }
+    void mama() const {
+      std::cout << "O mamifero " << get_nome() << " estah mamando\n";
+    } 
+};
+
+* Como testar esse método 'mama'?
+
+int main() {
+  Mamifero * m0 = new Mamifero("Tigrinho");
+  m0->mama();
+}
+
+* E esse método abaixo, ele compila?
+
+int main() {
+  Animal * m0 = new Mamifero("Tigrinho");
+  m0->mama();
+}
+
+* O que é classe estática?
+- A classe com a qual um objeto é declarado.
+
+* O que é classe dinâmica:
+- A classe com a qual um objeto é instanciado.
+
+* Quais métodos podem ser invocados sobre um objeto?
+- Os métodos declarados na classe estática daquele objeto.
+
+* E qual é a implementação de cada método virtual?
+- A implementação na classe dinâmica daquele objeto.
+
+=== Classes Abstratas ===
+
+* Se um animal "come de um jeito indefinido", será que ele deveria ter esse método?
+
+* O que você acha que significa a seguinte sintaxe:
+
+class Animal {
+  const std::string _nome;
+  public:
+    Animal(std::string nome): _nome(nome) {}
+    virtual void come() const = 0;
+    std::string get_nome() const {
+      return _nome;
+    }
+};
+
+* Será que esse código compila?
+
+int main() {
+  Animal * a0 = new Animal("Tigrinho");
+}
+
+* E esse código, ele compila?
+
+int main() {
+  Animal * m0 = new Mamifero("Tigrinho");
+}
+
+* É possível instanciar classes abstratas?
+
+* Será que teria jeito de termos um método abstrato que não fosse virtual?
+
+class Animal {
+    ...
+    void come() const = 0;
+    ...
+};
+
+* Para que servem classes abstratas?
+
+##### COMEÇO DA LEI #####
+#
+# Thou Shalt Only Inherit From Abstract Classes (sempre que possível, hehe)
+#
+####### FIM DA LEI ######
+
+=== Override ===
+
+* Considere a implementação abaixo com a palavra 'override'. O que será que 
+  significa essa palavra?
+
+class Mamifero: public Animal {
+  public:
+    Mamifero(std::string nome): Animal(nome) {}
+    void come() const override {
+      std::cout << "O mamifero " << get_nome() << " come mamando\n";
+    }
+    ...
+};
+
+* O programa compilaria se marcássemos 'mama' com a palavra override?
+
+class Mamifero: public Animal {
+  public:
+    Mamifero(std::string nome): Animal(nome) {}
+    void come() const override {
+      std::cout << "O mamifero " << get_nome() << " come mamando\n";
+    }
+    void mama() const override /* Aqui! */ {
+      std::cout << "O mamifero " << get_nome() << " estah mamando\n";
+    }
+};
+
+* O programa compilaria se "come" não fosse virtual em Animal?
+
+class Animal {
+  const std::string _nome;
+  public:
+    Animal(std::string nome): _nome(nome) {}
+    void come() const {};
+    std::string get_nome() const {
+      return _nome;
+    }
+};
+
+* O que imprime o programa abaixo?
+
+#include <iostream>
+class X {
+  public:
+  void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  void print() { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X(), *y = new Y();
+  x->print();
+  y->print();
+}
+
+* O programa abaixo compila?
+
+#include <iostream>
+class X {
+  public:
+  void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  void print() { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  Y *y = new Y();
+  x->print();
+  y->print();
+}
+
+* O que imprime o programa abaixo?
+
+#include <iostream>
+class X {
+  public:
+  void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  public:
+  void print() { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  Y *y = new Y();
+  x->print();
+  y->print();
+}
+
+* O que imprime o programa abaixo?
+
+#include <iostream>
+class X {
+  public:
+  virtual void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  public:
+  void print() { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  X *y = new Y();
+  x->print();
+  y->print();
+}
+
+* E o programa abaixo?
+
+#include <iostream>
+class X {
+  public:
+  void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  public:
+  virtual void print() { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  X *y = new Y();
+  x->print();
+  y->print();
+}
+
+* E o programa abaixo, ele compila?
+
+#include <iostream>
+class X {
+  public:
+  virtual void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  public:
+  void print() override { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  X *y = new Y();
+  x->print();
+  y->print();
+}
+
+* E, finalmente, o programa abaixo, ele compila?
+
+#include <iostream>
+class X {
+  public:
+  void print() { std::cout << "X\n"; }
+};
+class Y: public X {
+  public:
+  void print() override { std::cout << "Y\n"; }
+};
+int main() {
+  X *x = new X();
+  X *y = new Y();
+  x->print();
+  y->print();
+}
+
+
+
+
+
+
+
+
+
+
