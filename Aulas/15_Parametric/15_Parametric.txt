@@ -245,6 +245,9 @@ int main() {
   std::cout << p1.getSecond() << std::endl;
 }
 
+* The code above declares a class as a template, not a function, as we did before.
+  Do you see the difference?
+
 * Consider the template below. Can we remove the type declaration from 
   "k=GetMax<int>(i, j)", for instance?
 
@@ -314,7 +317,7 @@ int main () {
 using namespace std;
 struct Interval {
   int x, y;
-  bool operator> (const Interval& i1) {
+  bool operator > (const Interval& i1) {
     return x < i1.x && y > i1.y;
   } 
 };
@@ -443,7 +446,7 @@ int main (int argc, char** argv) {
 * What is the problem with the program above?
 
 * Can we separate a template into header and implementation modules?
-// BoundedArray.h:
+// BoundedArray.hpp:
 #ifndef BOUNDED_ARRAY_H
 #define BOUNDED_ARRAY_H
 template <class T, int N> class BoundedArray {
@@ -456,7 +459,7 @@ template <class T, int N> class BoundedArray {
 // BoundedArrayMain.cpp:
 #include <iostream>
 #include <assert.h>
-#include "BoundedArray.h"
+#include "BoundedArray.hpp"
 template <class T, int N> void BoundedArray<T,N>::set (int x, T value) {
   assert(x >= 0 && x < N);
   memblock[x]=value;
