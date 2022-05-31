@@ -1,0 +1,458 @@
+* Do you remember the program from the last class that reads types from the
+  input, sorts them out, and prints the results?
+
+#include <vector>
+#include <iostream>
+#include <algorithm>
+template <class T> void readNSort() {
+  std::vector<T> data;
+  T val;
+  while (std::cin >> val) {
+    data.push_back(val);
+  }
+  std::sort(data.begin(), data.end());
+  for (T elem: data) {
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+}
+int main() {
+  readNSort<int>();
+}
+
+* Let's improve its design a bit. What do you suggest?
+
+* Can you split readNSort into its basic components?
+
+* What are these basic components?
+- Read data
+- Sort data
+- Print data
+
+* Why is it better to have them in separate functions?
+
+* So, can you split them up? How to pass data from one function to the other?
+
+#include <vector>
+#include <iostream>
+#include <algorithm>
+template <class T> void read(std::vector<T>& data) {
+  T val;
+  while (std::cin >> val) {
+    data.push_back(val);
+  }
+} 
+template <class T> void print(std::vector<T>& data) {
+  for (T elem: data) {
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+}
+int main() {
+  std::vector<int> vec;
+  read<int>(vec);
+  std::sort(vec.begin(), vec.end());
+  print<int>(vec);
+}
+
+* Before we move on, can you put commas in between data in function print?
+
+template <class T> void print(std::vector<T>& data) {
+  bool isFirst = true;
+  for (T elem: data) {
+    if (isFirst) { 
+      isFirst = false;
+    } else { 
+      std::cout << ", ";
+    } 
+    std::cout << elem;
+  }
+  std::cout << std::endl;
+}
+
+* Notice that we do not need to indicate the type in all the generic functions:
+
+int main() {
+  std::vector<int> vec;
+  read(vec);
+  std::sort(vec.begin(), vec.end());
+  print(vec);
+}
+
+* Can you remove the type parameter from vec?
+
+* What does a type must have to work with read?
+  - The in-streaming operator >>
+
+* What about print?
+  - The out-streaming operator <<
+
+* And std::sort?
+  - Must be "sortable", i.e.: has the greater than operator >
+
+* Would your program work with the following type?
+
+struct Fraction {
+  int num, den;
+};
+
+* How can you make "read(...)" work with it?
+
+// Fraction.h:
+#ifndef DATA_H
+#define DATA_H
+struct Fraction {
+  int num, den;
+  friend std::istream& operator >> (std::istream& is, Fraction& s);
+};
+#endif
+// Fraction.cpp:
+#include <iostream>
+#include "Fraction.h"
+std::istream& operator >> (std::istream& is, Fraction& dt) {
+  is >> dt.num >> dt.den;
+  return is;
+}
+// Main.cpp:
+// ...
+int main() {
+  std::vector<Fraction> vec;
+  read(vec);
+}
+
+* What is the "friend" keyword doing in the declaration of <<?
+
+* Will Fraction work with "print"?
+
+* How to make it work?
+
+// Fraction.h:
+#ifndef DATA_H
+#define DATA_H
+struct Fraction {
+  int num, den;
+  friend std::ostream& operator << (std::ostream& is, Fraction& s);
+  friend std::istream& operator >> (std::istream& is, Fraction& s);
+};
+#endif
+// Fraction.cpp:
+#include <iostream>
+#include "Fraction.h"
+std::ostream& operator << (std::ostream& os, Fraction& dt) {
+  os << dt.num << "/" << dt.den;
+  return os;
+}
+std::istream& operator >> (std::istream& is, Fraction& dt) {
+  is >> dt.num >> dt.den;
+  return is;
+}
+// Main.cpp:
+int main() {
+  std::vector<Fraction> vec;
+  read(vec);
+  print(vec);
+}
+
+* Will std::sort work on Fraction?
+
+* And how to make it work?
+
+// Fraction.h
+#ifndef DATA_H
+#define DATA_H
+struct Fraction {
+  int num, den;
+  bool operator < (const Fraction& f) const;
+  friend std::ostream& operator << (std::ostream& is, Fraction& f);
+  friend std::istream& operator >> (std::istream& is, Fraction& f);
+};
+#endif
+// Fraction.cpp
+#include <iostream>
+#include "Fraction.h"
+bool Fraction::operator < (const Fraction& f) const {
+  const double commonDen = den * f.den;
+  return (num * f.den)/commonDen < (f.num * den)/commonDen;
+}
+std::ostream& operator << (std::ostream& os, Fraction& dt) {
+  os << dt.num << "/" << dt.den;
+  return os;
+}
+std::istream& operator >> (std::istream& is, Fraction& dt) {
+  is >> dt.num >> dt.den;
+  return is;
+}
+// Main.cpp
+int main() {
+  std::vector<Fraction> vec;
+  read(vec);
+  std::sort(vec.begin(), vec.end());
+  print(vec);
+}
+
+* Now that we have <, will > also work, e.g.:
+
+#include <iostream>
+#include "Fraction.h"
+int main() {
+  Fraction f0, f1;
+  f0.den = 2;
+  f0.num = 3;
+  f1.den = 5;
+  f1.num = 2;
+  std::cout << (f0 < f1) << std::endl;
+  std::cout << (f0 > f1) << std::endl;
+}
+
+* We can easily define the other relational operators from <, right?
+
+// Fraction.h
+#ifndef DATA_H
+#define DATA_H
+struct Fraction {
+  int num, den;
+  bool operator < (const Fraction& f) const;
+  inline bool operator > (const Fraction& rhs) const {
+    return rhs < *this;
+  }
+  inline bool operator <= (const Fraction& rhs) const {
+    return !(*this > rhs);
+  }
+  inline bool operator >= (const Fraction& rhs) const {
+    return !(*this < rhs);
+  }
+  friend std::ostream& operator << (std::ostream& is, Fraction& f);
+  friend std::istream& operator >> (std::istream& is, Fraction& f);
+};
+#endif
+// Main.cpp
+#include <iostream>
+#include "Fraction.h"
+int main() {
+  Fraction f0, f1, f2;
+  f0.den = 2;
+  f0.num = 3;
+  f1.den = 5;
+  f1.num = 2;
+  f2.den = 2;
+  f2.num = 3;
+  std::cout << (f0 < f1) << std::endl;
+  std::cout << (f0 > f1) << std::endl;
+  std::cout << (f0 <= f2) << std::endl;
+  std::cout << (f0 >= f2) << std::endl;
+  std::cout << (f0 < f2) << std::endl;
+  std::cout << (f0 > f2) << std::endl;
+}
+
+* What is this word "inline" the declaration of the functions?
+
+* Can you write a function to sum up elements, like we did last class?
+
+template <class T> T sum(std::vector<T>& data) {
+  T sum = 0;
+  for (T val: data) {
+    sum += val;
+  } 
+  return sum;
+}
+
+* Is this function going to work with Fraction?
+
+Sum_Gen0.cpp:15:5: error: no viable conversion from 'int' to 'Fraction'
+  T sum = 0;
+
+* How to fix this problem?
+
+struct Fraction {
+  Fraction(int n=0, int d=1): num(n), den(d) {}
+  ...
+};
+
+* What does it mean, this constructor?
+
+struct Fraction {
+  Fraction(int n, int d): num(n), den(d) {}
+  Fraction(int n): num(n), den(1) {}
+  Fraction(): num(0), den(1) {}
+  ...
+};
+
+* What if we wanted to the the opposite, i.e., convert a fraction to an
+  integer?
+
+// Fraction.h:
+struct Fraction {
+  operator int() const { return num/den; }
+  ...
+};
+// Main.cpp:
+int main() {
+  Fraction f0(4, 2);
+  int x = f0;
+  std::cout << x << std::endl;
+}
+
+* Can you convert instances of Fraction to doubles and floats?
+
+// Fraction.h:
+struct Fraction {
+  operator int() const { return num/den; }
+  operator float() const { return num/(float)den; }
+  operator double() const { return num/(double)den; }
+  ...
+};
+// Main.cpp:
+int main() {
+  Fraction f0(7, 3);
+  int i = f0;
+  float f = f0;
+  double d = f0;
+  std::cout << i << std::endl;
+  std::cout << f << std::endl;
+  std::cout << d << std::endl;
+}
+
+* Can you convert a Fraction to a boolean? How would be the semantics of the
+  conversion?
+
+struct Fraction {
+  operator bool() const { return num != 0; }
+  ...
+};
+
+* And now, will the generic sum function work with Fraction? To remind you of
+  it, see the code below:
+
+template <class T> T sum(std::vector<T>& data) {
+  T sum = 0;
+  for (T val: data) {
+    sum += val;
+  } 
+  return sum;
+}
+
+* What is missing to make it work?
+
+// Fraction:
+struct Fraction {
+  Fraction& operator += (const Fraction& f) {
+    int newDen = den * f.den;
+    int newNum = num * f.den + f.num * den;
+    den = newDen;
+    num = newNum;
+    return *this;
+  }
+  ...
+};
+// Main.cpp:
+int main() {
+  std::vector<Fraction> vec;
+  read(vec);
+  Fraction f = sum(vec);
+  std::cout << f << std::endl;
+}
+
+* What if we change the implementation of sum like the code below?
+
+* Why is it ambiguous?
+
+* Would it work if I simply remove conversions from bool, float and double?
+
+* But, what's the right way to solve this problem?
+
+struct Fraction {
+  Fraction operator + (const Fraction& f) {
+    int newDen = den * f.den;
+    int newNum = num * f.den + f.num * den;
+    Fraction ans(newNum, newDen);
+    return ans;
+  }
+  ...
+};
+
+* The annoying thing is that Fractions are never simplified. For instance:
+
+$> cat t3.txt 
+1 4 3 2 9 4
+$> ./a.out < t3.txt
+128/32
+
+* Could you re-write our definition of Fraction to simplify fractions?
+
+// Fraction.h
+struct Fraction {
+  int num, den;
+  Fraction(int n=0, int d=1) {
+    int div = gcd(n, d);
+    num = n/div;
+    den = d/div;
+  }
+  ...
+  private:
+  int gcd(int x, int y) {
+    if (y == 0) {
+      return x;
+    } else {
+      if (y > x) {
+        return gcd(y, x);
+      } else {
+        int r = x / y;
+        return gcd(y, x - r * y);
+      } 
+    } 
+  } 
+};
+
+=== Discussion ===
+
+* What are the advantages of overriding operators?
+
+* And what are the disadvantages?
+
+* Can we break algebraic assumptions, e.g., like commutativity?
+
+#include <iostream>
+int main() {
+  std::string s1 = "abc";
+  std::string s2 = "xyz";
+  std::string s12 = s1 + s2;
+  std::string s21 = s2 + s1;
+  std::cout << s12 << std::endl;
+  std::cout << s21 << std::endl;
+}
+
+* Which function will be called?
+
+#include <iostream>
+int square(int a) {
+  std::cout << "Square of ints\n";
+  return a * a;
+}
+double square(double a) {
+  std::cout << "Square of doubles\n";
+  return a * a;
+}
+int main() {
+  double b = 'a';
+  int i = 'a';
+  std::cout << square(b) << std::endl;
+  std::cout << square(i) << std::endl;
+  std::cout << square('a') << std::endl;
+}
+
+* And now?
+
+#include <iostream>
+int sum(int a, int b) {
+  std::cout << "Sum of ints\n";
+  return a + b;
+}
+double sum(double a, double b) {
+  std::cout << "Sum of doubles\n";
+  return a + b;
+}
+int main() {
+  std::cout << "The sum is " << sum(1, 2) << std::endl;
+  std::cout << "The sum is " << sum(1.2, 2.1) << std::endl;
+  std::cout << "The sum is " << sum(1, 2.1) << std::endl;
+}
