@@ -1,3 +1,25 @@
+* What defines the "name" of a function in C++?
+
+* Would this program work?
+
+#include <iostream>
+int square(int a) {
+  std::cout << "Square of ints\n";
+  return a * a;
+}
+double square(double a) {
+  std::cout << "Square of doubles\n";
+  return a * a;
+}
+int main() {
+  double b = 3.14;
+  int i = 3;
+  std::cout << square(b) << std::endl;
+  std::cout << square(i) << std::endl;
+}
+
+* Can a symbol, like '+', be the 'name' of a function?
+
 * Do you remember the program from the last class that reads types from the
   input, sorts them out, and prints the results?
 
@@ -92,18 +114,25 @@ int main() {
 
 * Would your program work with the following type?
 
-struct Fraction {
+class Fraction {
   int num, den;
+  public:
+  Fraction(): num(0), den(1) {}
+  Fraction(int n, int d): num(n), den(d) {}
 };
+
 
 * How can you make "read(...)" work with it?
 
 // Fraction.h:
 #ifndef DATA_H
 #define DATA_H
-struct Fraction {
+class Fraction {
   int num, den;
-  friend std::istream& operator >> (std::istream& is, Fraction& s);
+  public:
+  Fraction(): num(0), den(1) {}
+  Fraction(int n, int d): num(n), den(d) {}
+  friend std::istream& operator >> (std::istream& is, Fraction& f);
 };
 #endif
 // Fraction.cpp:
@@ -129,10 +158,13 @@ int main() {
 // Fraction.h:
 #ifndef DATA_H
 #define DATA_H
-struct Fraction {
+class Fraction {
   int num, den;
-  friend std::ostream& operator << (std::ostream& is, Fraction& s);
-  friend std::istream& operator >> (std::istream& is, Fraction& s);
+  public:
+  Fraction(): num(0), den(1) {}
+  Fraction(int n, int d): num(n), den(d) {}
+  friend std::ostream& operator << (std::ostream& is, Fraction& f);
+  friend std::istream& operator >> (std::istream& is, Fraction& f);
 };
 #endif
 // Fraction.cpp:
@@ -160,8 +192,11 @@ int main() {
 // Fraction.h
 #ifndef DATA_H
 #define DATA_H
-struct Fraction {
+class Fraction {
   int num, den;
+  public:
+  Fraction(): num(0), den(1) {}
+  Fraction(int n, int d): num(n), den(d) {}
   bool operator < (const Fraction& f) const;
   friend std::ostream& operator << (std::ostream& is, Fraction& f);
   friend std::istream& operator >> (std::istream& is, Fraction& f);
@@ -195,11 +230,7 @@ int main() {
 #include <iostream>
 #include "Fraction.h"
 int main() {
-  Fraction f0, f1;
-  f0.den = 2;
-  f0.num = 3;
-  f1.den = 5;
-  f1.num = 2;
+  Fraction f0(2, 3), f1(5, 2);
   std::cout << (f0 < f1) << std::endl;
   std::cout << (f0 > f1) << std::endl;
 }
@@ -209,33 +240,30 @@ int main() {
 // Fraction.h
 #ifndef DATA_H
 #define DATA_H
-struct Fraction {
+class Fraction {
   int num, den;
-  bool operator < (const Fraction& f) const;
-  inline bool operator > (const Fraction& rhs) const {
-    return rhs < *this;
-  }
-  inline bool operator <= (const Fraction& rhs) const {
-    return !(*this > rhs);
-  }
-  inline bool operator >= (const Fraction& rhs) const {
-    return !(*this < rhs);
-  }
+  public:
+  Fraction(): num(0), den(1) {}
+  Fraction(int n, int d): num(n), den(d) {}
+  bool operator < (const Fraction& f) const; 
   friend std::ostream& operator << (std::ostream& is, Fraction& f);
   friend std::istream& operator >> (std::istream& is, Fraction& f);
+  bool operator > (const Fraction& rhs) const {
+    return rhs < *this;
+  }
+  bool operator <= (const Fraction& rhs) const {
+    return !(*this > rhs);
+  }
+  bool operator >= (const Fraction& rhs) const {
+    return !(*this < rhs);
+  }
 };
 #endif
 // Main.cpp
 #include <iostream>
 #include "Fraction.h"
-int main() {
-  Fraction f0, f1, f2;
-  f0.den = 2;
-  f0.num = 3;
-  f1.den = 5;
-  f1.num = 2;
-  f2.den = 2;
-  f2.num = 3;
+void test01() {
+  Fraction f0(2, 3), f1(5, 2), f2(2, 3);
   std::cout << (f0 < f1) << std::endl;
   std::cout << (f0 > f1) << std::endl;
   std::cout << (f0 <= f2) << std::endl;
@@ -244,41 +272,7 @@ int main() {
   std::cout << (f0 > f2) << std::endl;
 }
 
-* What is this word "inline" the declaration of the functions?
-
-* Can you write a function to sum up elements, like we did last class?
-
-template <class T> T sum(std::vector<T>& data) {
-  T sum = 0;
-  for (T val: data) {
-    sum += val;
-  } 
-  return sum;
-}
-
-* Is this function going to work with Fraction?
-
-Sum_Gen0.cpp:15:5: error: no viable conversion from 'int' to 'Fraction'
-  T sum = 0;
-
-* How to fix this problem?
-
-struct Fraction {
-  Fraction(int n=0, int d=1): num(n), den(d) {}
-  ...
-};
-
-* What does it mean, this constructor?
-
-struct Fraction {
-  Fraction(int n, int d): num(n), den(d) {}
-  Fraction(int n): num(n), den(1) {}
-  Fraction(): num(0), den(1) {}
-  ...
-};
-
-* What if we wanted to the the opposite, i.e., convert a fraction to an
-  integer?
+* How to convert a fraction to an integer?
 
 // Fraction.h:
 struct Fraction {
@@ -320,6 +314,14 @@ struct Fraction {
   ...
 };
 
+* Now, how to convert an integer to a Fraction?
+
+class Fraction {
+  ...
+  Fraction(int n): num(n), den(1) {}
+  ...
+};
+
 * And now, will the generic sum function work with Fraction? To remind you of
   it, see the code below:
 
@@ -331,19 +333,23 @@ template <class T> T sum(std::vector<T>& data) {
   return sum;
 }
 
+* Will the assignment Fraction sum = 0 work?
+
 * What is missing to make it work?
 
 // Fraction:
 struct Fraction {
-  Fraction& operator += (const Fraction& f) {
-    int newDen = den * f.den;
-    int newNum = num * f.den + f.num * den;
-    den = newDen;
-    num = newNum;
-    return *this;
-  }
+  Fraction& operator += (const Fraction& f);
   ...
 };
+// Fraction.cpp:
+Fraction& Fraction::operator += (const Fraction& f) {
+  int newDen = den * f.den;
+  int newNum = num * f.den + f.num * den;
+  den = newDen;
+  num = newNum;
+  return *this;
+} 
 // Main.cpp:
 int main() {
   std::vector<Fraction> vec;
@@ -354,7 +360,15 @@ int main() {
 
 * What if we change the implementation of sum like the code below?
 
-* Why is it ambiguous?
+template <class T> T sum(std::vector<T>& data) {
+  T sum = 0;
+  for (T val: data) {
+    sum = sum + val;
+  } 
+  return sum;
+}
+
+* Why does the compiler complain that the conversion is ambiguous?
 
 * Would it work if I simply remove conversions from bool, float and double?
 
@@ -379,29 +393,33 @@ $> ./a.out < t3.txt
 
 * Could you re-write our definition of Fraction to simplify fractions?
 
-// Fraction.h
+// Fraction.hpp:
 struct Fraction {
   int num, den;
-  Fraction(int n=0, int d=1) {
-    int div = gcd(n, d);
-    num = n/div;
-    den = d/div;
-  }
+  Fraction(int n, int d);
   ...
   private:
-  int gcd(int x, int y) {
-    if (y == 0) {
-      return x;
-    } else {
-      if (y > x) {
-        return gcd(y, x);
-      } else {
-        int r = x / y;
-        return gcd(y, x - r * y);
-      } 
-    } 
-  } 
+    int gcd(int x, int y); 
 };
+// Fraction.cpp:
+Fraction::Fraction(int x, int y) {
+  int div = gcd(x, y);
+  num = x/div;
+  den = y/div;
+}
+
+int Fraction::gcd(int x, int y) {
+  if (y == 0) {
+    return x;
+  } else {
+    if (y > x) {
+      return gcd(y, x);
+    } else {
+      int r = x / y;
+      return gcd(y, x - r * y);
+    }
+  }
+}
 
 === Discussion ===
 
