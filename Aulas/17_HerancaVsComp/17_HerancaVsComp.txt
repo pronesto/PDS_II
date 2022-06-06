@@ -1,0 +1,303 @@
+=== Como usar herança ===
+
+* Como representar uma sequencia de dados?
+
+* Quais sao os passos para processar uma sequencia de dados?
+
+void process(std::vector<T>& data) {
+  start(data);
+  for (T& e: data) {
+    eval(e);
+  }
+  stop(data);
+}
+
+* Dentre esses passos, quais são absolutos, e quais poderiam variar?
+
+* Como implementar esse modelo em uma classe?
+
+#ifndef DATA_PROCESSOR_H
+#define DATA_PROCESSOR_H
+#include <vector>
+template <class T> class DataProcessor {
+  public:
+    void process(std::vector<T>& data) {
+      start(data);
+      for (T& e: data) {
+        eval(e);
+      }
+      stop(data);
+    }
+  private:
+    virtual void start(std::vector<T>& data) = 0;
+    virtual void stop(std::vector<T>& data) = 0;
+    virtual void eval(T& e) = 0; 
+};
+#endif
+
+* Implemente um processador que simplesmente imprima os dados:
+
+class DataPrinter: public DataProcessor<std::string> {
+  private:
+    void start(std::vector<std::string>& data) {
+      std::cout << "Tamanho da sequencia: " << data.size() << std::endl;
+    }
+    void eval(std::string& s) {
+      std::cout << " " << s;
+    }
+    void stop(std::vector<std::string>& data) {
+      std::cout << ".\n";
+    }
+};
+
+* Implemente um teste para essa classe:
+
+void test00() {
+  std::vector<std::string> vec;
+  vec.push_back("oi");
+  vec.push_back("pessoal");
+  DataProcessor<std::string> *dp = new DataPrinter();
+  dp->process(vec);
+}
+
+* Implemente um processador que some os inteiros em um vetor e imprima o resultado:
+
+class DataAdder: public DataProcessor<int> {
+  private:
+    void start(std::vector<int>& data) {
+      _sum = 0;
+    }
+    void eval(int& s) {
+      _sum += s;
+    }
+    void stop(std::vector<int>& data) {
+      std::cout << "Soma: " << _sum << std::endl;
+    }
+    int _sum;
+};
+
+* Implemente um teste para esta classe:
+
+void test01() {
+  std::vector<int> vec; 
+  vec.push_back(1);
+  vec.push_back(2);
+  DataProcessor<int> *dp = new DataAdder();
+  dp->process(vec);
+}
+
+* Implemente um processador que eleve cada número do vetor a uma certa potência:
+
+class DataPower: public DataProcessor<int> {
+  public:
+    DataPower(unsigned int pw): _power(pw) {}
+  private:
+    void start(std::vector<int>& data) {
+    }
+    void eval(int& s) {
+      int aux = s;
+      s = 1;
+      for (int i = 0; i < _power; i++) {
+        s *= aux;
+      }
+    }
+    void stop(std::vector<int>& data) {
+    }
+    int _power;
+};
+
+* Implemente um teste para DataPower:
+
+void test02() {
+  std::vector<int> vec;
+  vec.push_back(2);
+  vec.push_back(3);
+  vec.push_back(5);
+  DataProcessor<int> *dp = new DataPower(3);
+  dp->process(vec);
+  for (int i: vec) {
+    std::cout << i << std::endl;
+  }
+}
+
+* Por que é necessário implementar start e stop, se esses métodos não fazem nada?
+
+* Como poderíamos evitar de ter de implementar esses métodos?
+
+template <class T> class DataProcessor {
+  public:
+    void process(std::vector<T>& data) { ... }
+  private:
+    virtual void start(std::vector<T>& data) {};
+    virtual void stop(std::vector<T>& data) {};
+    virtual void eval(T& e) = 0; 
+};
+
+* Nesse caso, como seria a implementação de DataPower?
+
+class DataPower: public DataProcessor<int> {
+  public:
+    DataPower(unsigned int pw): _power(pw) {}
+  private:
+    void eval(int& s) {
+      int aux = s;
+      s = 1;
+      for (int i = 0; i < _power; i++) {
+        s *= aux;
+      }
+    }
+    int _power;
+};
+
+=== Composite ===
+
+* Como você poderia implementar expressões aritméticas?
+
+class Expr {
+  public:
+    virtual double value() const = 0;
+    virtual ~Expr() {}
+};
+
+* O que seria a representação de um número nessa notação?
+
+class Num: public Expr {
+    double _num;
+  public:
+    Num(double num): _num(num) {}
+    double value() const {
+      return _num;
+    }
+};
+
+* O que seria uma expressão unária?
+
+class UnOp: public Expr {
+  public:
+    UnOp(Expr* expr): _expr(expr) {}
+    virtual ~UnOp() {
+      delete _expr;
+    }
+  protected:
+    Expr* _expr;
+};
+
+* Discussão: qual o perigo dos destrutores apagarem as expressões?
+
+* O que seria uma implementação de uma expressão unária?
+
+class Neg: public UnOp {
+  public:
+    Neg(Expr* expr): UnOp(expr) {}
+    double value() const {
+      return -1.0 * _expr->value();
+    }
+};
+
+* O que seria uma expressão binária?
+
+class BinOp: public Expr {
+  public:
+    BinOp(Expr* esq, Expr* dir): _esq(esq), _dir(dir) {}
+    virtual ~BinOp() {
+      delete _esq;
+      delete _dir;
+    }
+  protected:
+    Expr* _esq;
+    Expr* _dir;
+};
+
+* Forneça uma implementação de uma expressão binária:
+
+class Add: public BinOp {
+  public:
+    Add(Expr* esq, Expr* dir): BinOp(esq, dir) {}
+    double value() const {
+      return _esq->value() + _dir->value();
+    }
+};
+
+* Escreva um teste para essas expressões:
+
+#include <iostream>
+#include "Expr.hpp"
+void test00() {
+  Expr* expr = new Add(new Num(3.14), new Neg(new Num(2.61)));
+  std::cout << expr->value() << std::endl;
+}
+int main() {
+  test00();
+}
+
+* Caso você queira adicionar mais expressões unárias ou binárias, seria
+  necessário mudar Expr, ou alguma subclasse de Expr?
+
+* Escreva uma expressão unária que eleve um número ao quadrado:
+
+class Square: public UnOp {
+  public:
+    Square(Expr* expr): UnOp(expr) {}
+    double value() const {
+      return _expr->value() * _expr->value();
+    }
+};
+
+* Escreva uma expressão binária que multiplique dois números:
+
+class Mul: public BinOp {
+  public:
+    Mul(Expr* esq, Expr* dir): BinOp(esq, dir) {}
+    double value() const {
+      return _esq->value() * _dir->value();
+    }
+};
+
+* Você conseguiria pensar em alguma expressão ternária?
+
+* Escreva uma implementação para expressões ternárias:
+
+class TerOp: public Expr { 
+  public:
+    TerOp(Expr* esq, Expr* mid, Expr* dir): _esq(esq), _mid(mid), _dir(dir) {}
+    virtual ~TerOp() {
+      delete _esq;
+      delete _mid;
+      delete _dir;
+    } 
+  protected:
+    Expr* _esq;
+    Expr* _mid;
+    Expr* _dir;
+};
+
+* Implemente a expressão Median, que encontra o valor médio dentre três valores:
+
+class Median: public TerOp {
+  double median;
+  public:
+    Median(Expr* esq, Expr* mid, Expr* dir): TerOp(esq, mid, dir), median(0.0) {
+      double e_value = esq->value();
+      double m_value = mid->value();
+      double d_value = dir->value();
+      std::vector<double> vec{e_value, m_value, d_value};
+      std::sort(vec.begin(), vec.end());
+      median = vec[1];
+    }
+    double value() const {
+      return median;
+    }
+};
+
+* Escreva um teste para essa expressão:
+
+void test02() {
+  Expr* expr0 = new Mul(new Num(3.14), new Square(new Num(2.61)));
+  Expr* expr1 = new Add(new Num(3.14), new Neg(new Num(2.61)));
+  Expr* expr2 = new Num(0.0);
+  std::cout << (new Median(expr0, expr1, expr2))->value() << std::endl;
+}
+    
+int main() {
+  test02();
+}
