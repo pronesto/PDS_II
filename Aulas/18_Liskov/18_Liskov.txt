@@ -4,24 +4,19 @@
 
 * Can you design a test for this class?
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
-// ...
-// class Rectangle { ... }
-// ...
-TEST_CASE("Testing the rectangle class:") {
+void test00() {
   Rectangle rect(2.0, 3.0);
-  CHECK(rect.getWidth() == 2.0);
-  CHECK(rect.getHeight() == 3.0);
-  CHECK(rect.getArea() == 6.0);
+  assert(rect.getWidth() == 2.0);
+  assert(rect.getHeight() == 3.0);
+  assert(rect.getArea() == 6.0);
   rect.setWidth(4.0);
-  CHECK(rect.getWidth() == 4.0);
-  CHECK(rect.getHeight() == 3.0);
-  CHECK(rect.getArea() == 12.0);
+  assert(rect.getWidth() == 4.0);
+  assert(rect.getHeight() == 3.0);
+  assert(rect.getArea() == 12.0);
   rect.setHeight(5.0);
-  CHECK(rect.getWidth() == 4.0);
-  CHECK(rect.getHeight() == 5.0);
-  CHECK(rect.getArea() == 20.0);
+  assert(rect.getWidth() == 4.0);
+  assert(rect.getHeight() == 5.0);
+  assert(rect.getArea() == 20.0);
 }
 
 * Can you design the class itself?
@@ -39,11 +34,11 @@ class Rectangle {
     double getHeight() const {
       return _height;
     }
-    void setWidth(double width) {
+    virtual void setWidth(double width) {
       assert(width >= 0.0 && "Width cannot be negative");
       _width = width;
     }
-    void setHeight(double height) {
+    virtual void setHeight(double height) {
       assert(height >= 0.0 && "Height cannot be negative");
       _height = height;
     }
@@ -68,19 +63,19 @@ class Rectangle {
 
 * Can you design a test for Square?
 
-TEST_CASE("Testing the square class:") {
+void test01("Testing the square class:") {
   Square sq(3.0);
-  CHECK(sq.getWidth() == 3.0);
-  CHECK(sq.getHeight() == 3.0);
-  CHECK(sq.getArea() == 9.0);
+  assert(sq.getWidth() == 3.0);
+  assert(sq.getHeight() == 3.0);
+  assert(sq.getArea() == 9.0);
   sq.setWidth(4.0);
-  CHECK(sq.getWidth() == 4.0);
-  CHECK(sq.getHeight() == 4.0);
-  CHECK(sq.getArea() == 16.0);
+  assert(sq.getWidth() == 4.0);
+  assert(sq.getHeight() == 4.0);
+  assert(sq.getArea() == 16.0);
   sq.setHeight(5.0);
-  CHECK(sq.getWidth() == 5.0);
-  CHECK(sq.getHeight() == 5.0);
-  CHECK(sq.getArea() == 25.0);
+  assert(sq.getWidth() == 5.0);
+  assert(sq.getHeight() == 5.0);
+  assert(sq.getArea() == 25.0);
 }
 
 * And can you design a class Square that passes this test?
@@ -89,45 +84,28 @@ class Square: public Rectangle {
   public:
     Square(double side): Rectangle(side, side) {
     }
-    virtual void setWidth(double side) {
+    void setWidth(double side) {
       assert(side >= 0.0 && "Width cannot be negative");
       Rectangle::setWidth(side);
       Rectangle::setHeight(side);
     }
-    virtual void setHeight(double side) {
+    void setHeight(double side) {
       assert(side >= 0.0 && "Height cannot be negative");
       Rectangle::setWidth(side);
       Rectangle::setHeight(side);
     }
 };
 
-* Can you design a test for Square?
-
-TEST_CASE("Testing the square class:") {
-  Square sq(3.0);
-  CHECK(sq.getWidth() == 3.0);
-  CHECK(sq.getHeight() == 3.0);
-  CHECK(sq.getArea() == 9.0);
-  sq.setWidth(4.0);
-  CHECK(sq.getWidth() == 4.0);
-  CHECK(sq.getHeight() == 4.0);
-  CHECK(sq.getArea() == 16.0);
-  sq.setHeight(5.0);
-  CHECK(sq.getWidth() == 5.0);
-  CHECK(sq.getHeight() == 5.0);
-  CHECK(sq.getArea() == 25.0);
-}
-
 * Write a test to a method "double sumAreas(std::vector<Rectangle*>& vec)",
   which receives a vector of Rectangles, and returns the sum of areas:
 
-TEST_CASE("Testing function sumAreas:") {
+void test02() {
   Rectangle *r0 = new Rectangle(2.0, 3.0);
   Rectangle *r1 = new Square(5.0);
   std::vector<Rectangle*> vec;
   vec.push_back(r0);
-  vec.push_back(r1); 
-  CHECK(sumArea(vec) == 31.0);
+  vec.push_back(r1);
+  assert(sumAreas(vec) == 31.0);
   delete r0;
   delete r1;
 }
@@ -146,19 +124,17 @@ double sumAreas(std::vector<Rectangle*>& vec) {
   "void incAreas(std::vector<Rectangle*>& vec, const double factor)",
   which increments the area of every rectangle by factor.
 
-TEST_CASE("Testing the function that manipulate areas:") {
+void test03() {
   Rectangle *r0 = new Rectangle(2.0, 3.0);
   Rectangle *r1 = new Square(5.0);
   std::vector<Rectangle*> vec;
   vec.push_back(r0);
   vec.push_back(r1);
-  SUBCASE("sumAreas:") {
-    CHECK(sumAreas(vec) == 31.0);
-  }
-  SUBCASE("incAreas:") {
-    incAreas(vec, 1.1);
-    CHECK(sumAreas(vec) == 1.1 * 31.0);
-  }
+  assert(sumAreas(vec) == 31.0);
+  incAreas(vec, 1.1);
+  assert(sumAreas(vec) == 1.1 * 31.0);
+  delete r0;
+  delete r1;
 }
 
 * Implement a function incAreas that passes this test:
@@ -185,6 +161,7 @@ void incAreas(std::vector<Rectangle*>& vec, const double factor) {
 - Yes.
 
 * What are the post-conditions of mutable Rectangle?
+
 virtual void setWidth(double width) {
   assert(width >= 0.0 && "Width cannot be negative");
   double currentHeight = getHeight();
@@ -201,9 +178,12 @@ virtual void setWidth(double width) {
   any object y of type S, if S is a subtype of T.
 
 * How can we ensure LSP?
-- Preconditions cannot be strengthened in a subtype.
-- Postconditions cannot be weakened in a subtype.
-- Invariants of the supertype must be preserved in a subtype.
+1 - Preconditions cannot be strengthened in a subtype.
+2 - Postconditions cannot be weakened in a subtype.
+3 - Invariants of the supertype must be preserved in a subtype.
+
+* What is the rule that our implementation of Square is breaking?
+- We are weakening the post-conditions of Rectangle.
 
 * How to solve this issue?
 
@@ -213,19 +193,18 @@ virtual void setWidth(double width) {
 
 * Can you implement a test for an immutable version of Rectangle?
 
-TEST_CASE("Testing the rectangle class:") {
+void test00() {
   Rectangle rect0(2.0, 3.0);
-  CHECK(rect0.getWidth() == 2.0);
-  CHECK(rect0.getHeight() == 3.0);
-  CHECK(rect0.getArea() == 6.0);
+  assert(rect0.getWidth() == 2.0);
+  assert(rect0.getHeight() == 3.0);
+  assert(rect0.getArea() == 6.0);
 }
 
 * And how would be the implementation of this immutable Rectangle?
 
 class Rectangle {
   public:
-    Rectangle(double width, double height): _width(width), _height(height) {
-    }
+    Rectangle(double width, double height): _width(width), _height(height) {}
     double getWidth() const {
       return _width;
     }
@@ -236,17 +215,17 @@ class Rectangle {
       return _width * _height;
     }
   private:
-    double _width;
-    double _height;
+    const double _width;
+    const double _height;
 };
 
 * Can you think on a test for an immutable implementation of Square?
 
-TEST_CASE("Testing the square class:") {
+void test01() {
   Square sq0(3.0);
-  CHECK(sq0.getWidth() == 3.0);
-  CHECK(sq0.getHeight() == 3.0);
-  CHECK(sq0.getArea() == 9.0);
+  assert(sq0.getWidth() == 3.0);
+  assert(sq0.getHeight() == 3.0);
+  assert(sq0.getArea() == 9.0);
 }
 
 * How would then be the implementation of Square?
@@ -279,7 +258,7 @@ double sumAreas(std::vector<Rectangle*>& vec) {
   return sum;
 }
 
-* What function incAreas, would we have to change it?
+* What about function incAreas, would we have to change it?
 - Yes, because we no longer have a way to change the height or width of
   Rectangles or Squares.
 
@@ -328,22 +307,19 @@ void incAreas(
 - Yes, absolutely!
 
 * How to avoid it?
-TEST_CASE("Testing the function that manipulate areas:") {
+
+void test04() {
   Rectangle *r0 = new Rectangle(2.0, 3.0);
   Rectangle *r1 = new Square(5.0);
   std::vector<Rectangle*> vec;
   vec.push_back(r0);
   vec.push_back(r1);
   std::vector<Rectangle*> dst;
-  SUBCASE("sumAreas:") {
-    CHECK(sumAreas(vec) == 31.0);
-  }
-  SUBCASE("incAreas:") {
-    incAreas(vec, dst, 1.1);
-    CHECK(sumAreas(dst) == 1.1 * 31.0);
-    for (Rectangle* r: dst) { // Clear the data, after you are done with it!
-      delete r;
-    }
+  assert(sumAreas(vec) == 31.0);
+  incAreas(vec, dst, 1.1);
+  assert(sumAreas(dst) == 1.1 * 31.0);
+  for (Rectangle* r: dst) {
+    delete r;
   }
   delete r0;
   delete r1;
@@ -389,8 +365,9 @@ class Integer {
 class Natural: public Integer {
   public:
     Natural(unsigned long i): Integer(i) {}
-    Integer inv() const {
-      throw "Natural numbers don't have inverses.";
+    Integer* inv() const {
+      std::cout << "Natural numbers don't have inverses.\n";
+      exit(1);
     }
 };
 
@@ -399,16 +376,16 @@ class Natural: public Integer {
 * Can you write a function to negate a set of Integer instances? Start with the
   test:
 
-TEST_CASE("Negating a set of Integers:") {
+void test01() {
   const int TEST_SIZE = 10;
-  std::vector<Integer*> ints;
+  std::vector<Integer*> ints;  
   for (int i = 0; i < TEST_SIZE; i++) {
-    ints.push_back(new Integer(i, true));
+    ints.push_back(new Natural(i));
   }
   std::vector<Integer*> negs;
   neg(ints, negs);
   for (int i = 0; i < TEST_SIZE; i++) {
-    CHECK(*ints[i]->inv() == *negs[i]);
+    assert(*ints[i]->inv() == *negs[i]);
   }
   for (int i = 0; i < TEST_SIZE; i++) {
     delete ints[i];
@@ -428,7 +405,7 @@ void neg(std::vector<Integer*>& src, std::vector<Integer*>& dst) {
 * What if we tried to negate Naturals, what would happen? What would be the
   result of the test below?
 
-TEST_CASE("Negating natural numbers:") {
+void test01() {
   const int TEST_SIZE = 10;
   std::vector<Integer*> ints;
   for (int i = 0; i < TEST_SIZE; i++) {
@@ -437,7 +414,7 @@ TEST_CASE("Negating natural numbers:") {
   std::vector<Integer*> negs;
   neg(ints, negs);
   for (int i = 0; i < TEST_SIZE; i++) {
-    CHECK(*ints[i]->inv() == *negs[i]);
+    assert(*ints[i]->inv() == *negs[i]);
   }
   for (int i = 0; i < TEST_SIZE; i++) {
     delete ints[i];
@@ -447,7 +424,12 @@ TEST_CASE("Negating natural numbers:") {
 
 * Is Natural a good extension of Integer?
 
-* What is the problem with this modeling?
+* What is the problem with this modeling? What property below is it breaking?
+
+1 - Preconditions cannot be strengthened in a subtype.
+2 - Postconditions cannot be weakened in a subtype.
+3 - Invariants of the supertype must be preserved in a subtype.
+
 - We are removing a valid property of Integer, e.g., neg. Code that expects
   Integers should be able to apply neg on them. We are breaking the contract
   of this code, because we are not meeting its pre-conditions.
@@ -456,3 +438,7 @@ TEST_CASE("Negating natural numbers:") {
 - That its inputs be "negatable".
 
 * Is this pre-condition met by Naturals?
+
+* Would we have this problem if we extended only abstract classes?
+- We cannot change the behavior of objects of an abstract class, because an abstract
+  class cannot be instantiated.
