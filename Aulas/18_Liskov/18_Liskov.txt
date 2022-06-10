@@ -1,0 +1,458 @@
+=== Liskov Substitution Principle ===
+
+* Let's design a Rectangle class. What would be the methods that it contain?
+
+* Can you design a test for this class?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+// ...
+// class Rectangle { ... }
+// ...
+TEST_CASE("Testing the rectangle class:") {
+  Rectangle rect(2.0, 3.0);
+  CHECK(rect.getWidth() == 2.0);
+  CHECK(rect.getHeight() == 3.0);
+  CHECK(rect.getArea() == 6.0);
+  rect.setWidth(4.0);
+  CHECK(rect.getWidth() == 4.0);
+  CHECK(rect.getHeight() == 3.0);
+  CHECK(rect.getArea() == 12.0);
+  rect.setHeight(5.0);
+  CHECK(rect.getWidth() == 4.0);
+  CHECK(rect.getHeight() == 5.0);
+  CHECK(rect.getArea() == 20.0);
+}
+
+* Can you design the class itself?
+
+#include "assert.h"
+class Rectangle {
+  public:
+    Rectangle(double width, double height) {
+      setWidth(width);
+      setHeight(height);
+    }
+    double getWidth() const {
+      return _width;
+    }
+    double getHeight() const {
+      return _height;
+    }
+    void setWidth(double width) {
+      assert(width >= 0.0 && "Width cannot be negative");
+      _width = width;
+    }
+    void setHeight(double height) {
+      assert(height >= 0.0 && "Height cannot be negative");
+      _height = height;
+    }
+    double getArea() const {
+      return _width * _height;
+    }
+  private:
+    double _width;
+    double _height;
+};
+
+* Now, imagine that we want to design a class Square. Are squares also
+  rectangles?
+
+* Which properties could we inherit from Rectangle?
+- setWidth and setHeight must change, for we cannot have Squares with
+  sides of different lengths.
+
+* To allow overriding these properties, must we change them in Rectangle?
+- They must be virtual methods.
+- Rectangle should have a virtual destructor.
+
+* Can you design a test for Square?
+
+TEST_CASE("Testing the square class:") {
+  Square sq(3.0);
+  CHECK(sq.getWidth() == 3.0);
+  CHECK(sq.getHeight() == 3.0);
+  CHECK(sq.getArea() == 9.0);
+  sq.setWidth(4.0);
+  CHECK(sq.getWidth() == 4.0);
+  CHECK(sq.getHeight() == 4.0);
+  CHECK(sq.getArea() == 16.0);
+  sq.setHeight(5.0);
+  CHECK(sq.getWidth() == 5.0);
+  CHECK(sq.getHeight() == 5.0);
+  CHECK(sq.getArea() == 25.0);
+}
+
+* And can you design a class Square that passes this test?
+
+class Square: public Rectangle {
+  public:
+    Square(double side): Rectangle(side, side) {
+    }
+    virtual void setWidth(double side) {
+      assert(side >= 0.0 && "Width cannot be negative");
+      Rectangle::setWidth(side);
+      Rectangle::setHeight(side);
+    }
+    virtual void setHeight(double side) {
+      assert(side >= 0.0 && "Height cannot be negative");
+      Rectangle::setWidth(side);
+      Rectangle::setHeight(side);
+    }
+};
+
+* Can you design a test for Square?
+
+TEST_CASE("Testing the square class:") {
+  Square sq(3.0);
+  CHECK(sq.getWidth() == 3.0);
+  CHECK(sq.getHeight() == 3.0);
+  CHECK(sq.getArea() == 9.0);
+  sq.setWidth(4.0);
+  CHECK(sq.getWidth() == 4.0);
+  CHECK(sq.getHeight() == 4.0);
+  CHECK(sq.getArea() == 16.0);
+  sq.setHeight(5.0);
+  CHECK(sq.getWidth() == 5.0);
+  CHECK(sq.getHeight() == 5.0);
+  CHECK(sq.getArea() == 25.0);
+}
+
+* Write a test to a method "double sumAreas(std::vector<Rectangle*>& vec)",
+  which receives a vector of Rectangles, and returns the sum of areas:
+
+TEST_CASE("Testing function sumAreas:") {
+  Rectangle *r0 = new Rectangle(2.0, 3.0);
+  Rectangle *r1 = new Square(5.0);
+  std::vector<Rectangle*> vec;
+  vec.push_back(r0);
+  vec.push_back(r1); 
+  CHECK(sumArea(vec) == 31.0);
+  delete r0;
+  delete r1;
+}
+
+* Now, write the method sumAreas:
+
+double sumAreas(std::vector<Rectangle*>& vec) {
+  double sum = 0.0;
+  for (Rectangle* r: vec) {
+    sum += r->getArea();
+  } 
+  return sum;
+}
+
+* Write a test to a function
+  "void incAreas(std::vector<Rectangle*>& vec, const double factor)",
+  which increments the area of every rectangle by factor.
+
+TEST_CASE("Testing the function that manipulate areas:") {
+  Rectangle *r0 = new Rectangle(2.0, 3.0);
+  Rectangle *r1 = new Square(5.0);
+  std::vector<Rectangle*> vec;
+  vec.push_back(r0);
+  vec.push_back(r1);
+  SUBCASE("sumAreas:") {
+    CHECK(sumAreas(vec) == 31.0);
+  }
+  SUBCASE("incAreas:") {
+    incAreas(vec, 1.1);
+    CHECK(sumAreas(vec) == 1.1 * 31.0);
+  }
+}
+
+* Implement a function incAreas that passes this test:
+
+void incAreas(std::vector<Rectangle*>& vec, const double factor) {
+  for (Rectangle* r: vec) {
+    r->setHeight(r->getHeight() * factor);
+  }
+}
+
+* What went wrong with this test?
+
+* Is a Square really a Rectangle?
+
+* What a mutable Square. Is it really a mutable Rectangle?
+
+* Does a mutable Square preserve all the pre- and post-conditions of a mutable
+  Rectangle?
+
+* What are the pre--conditions of setWidth?
+- assert(width >= 0.0 && "Width cannot be negative");
+
+* Are these pre-conditions preserved in Square?
+- Yes.
+
+* What are the post-conditions of mutable Rectangle?
+virtual void setWidth(double width) {
+  assert(width >= 0.0 && "Width cannot be negative");
+  double currentHeight = getHeight();
+  _width = width;
+  assert(currentHeight == getHeight() && "Error: height has changed!");
+}
+
+* Is this post-condition preserved by mutable Square?
+- not really.
+
+* Which guidelines should we observe when using inheritance?
+- The Liskov Substitution Principle (LSP):
+  Let P(x) be a property of object x of type T. Then P(y) must be true for
+  any object y of type S, if S is a subtype of T.
+
+* How can we ensure LSP?
+- Preconditions cannot be strengthened in a subtype.
+- Postconditions cannot be weakened in a subtype.
+- Invariants of the supertype must be preserved in a subtype.
+
+* How to solve this issue?
+
+=== LSP: Dealing with the Problem ===
+
+* Would it be a problem if Rectangles and Squares were immutable?
+
+* Can you implement a test for an immutable version of Rectangle?
+
+TEST_CASE("Testing the rectangle class:") {
+  Rectangle rect0(2.0, 3.0);
+  CHECK(rect0.getWidth() == 2.0);
+  CHECK(rect0.getHeight() == 3.0);
+  CHECK(rect0.getArea() == 6.0);
+}
+
+* And how would be the implementation of this immutable Rectangle?
+
+class Rectangle {
+  public:
+    Rectangle(double width, double height): _width(width), _height(height) {
+    }
+    double getWidth() const {
+      return _width;
+    }
+    double getHeight() const {
+      return _height;
+    }
+    double getArea() const {
+      return _width * _height;
+    }
+  private:
+    double _width;
+    double _height;
+};
+
+* Can you think on a test for an immutable implementation of Square?
+
+TEST_CASE("Testing the square class:") {
+  Square sq0(3.0);
+  CHECK(sq0.getWidth() == 3.0);
+  CHECK(sq0.getHeight() == 3.0);
+  CHECK(sq0.getArea() == 9.0);
+}
+
+* How would then be the implementation of Square?
+
+class Square: public Rectangle {
+  public:
+    Square(double side): Rectangle(side, side) {}
+};
+
+* Would we have to change the test of sumAreas()? The test is given below:
+
+TEST_CASE("Testing function sumAreas:") {
+  Rectangle *r0 = new Rectangle(2.0, 3.0);
+  Rectangle *r1 = new Square(5.0);
+  std::vector<Rectangle*> vec;
+  vec.push_back(r0);
+  vec.push_back(r1);
+  CHECK(sumAreas(vec) == 31.0);
+  delete r0;
+  delete r1;
+}
+
+* And the implementation of sumAreas, would we have to change it?
+// Not really:
+double sumAreas(std::vector<Rectangle*>& vec) {
+  double sum = 0.0;
+  for (Rectangle* r: vec) {
+    sum += r->getArea();
+  }
+  return sum;
+}
+
+* What function incAreas, would we have to change it?
+- Yes, because we no longer have a way to change the height or width of
+  Rectangles or Squares.
+
+* Can you think about a new signature for this function?
+
+void incAreas(
+    std::vector<Rectangle*>& src,
+    std::vector<Rectangle*>& dst,
+    const double factor
+)
+
+* Can you implement a test for this new signature?
+
+TEST_CASE("Testing the function that manipulate areas:") {
+  Rectangle *r0 = new Rectangle(2.0, 3.0);
+  Rectangle *r1 = new Square(5.0);
+  std::vector<Rectangle*> vec;
+  vec.push_back(r0);
+  vec.push_back(r1);
+  std::vector<Rectangle*> dst;
+  SUBCASE("sumAreas:") {
+    CHECK(sumAreas(vec) == 31.0);
+  }
+  SUBCASE("incAreas:") {
+    incAreas(vec, dst, 1.1);
+    CHECK(sumAreas(dst) == 1.1 * 31.0);
+  }
+  delete r0;
+  delete r1;
+}
+
+* And can you implement a version of incAreas that passes this test?
+
+void incAreas(
+    std::vector<Rectangle*>& src,
+    std::vector<Rectangle*>& dst,
+    const double factor
+) {
+  dst.clear();
+  for (Rectangle* r: src) {
+    dst.push_back(new Rectangle(r->getWidth(), r->getHeight() * 1.1));
+  }
+}
+
+* Does this program have a memory leak?
+- Yes, absolutely!
+
+* How to avoid it?
+TEST_CASE("Testing the function that manipulate areas:") {
+  Rectangle *r0 = new Rectangle(2.0, 3.0);
+  Rectangle *r1 = new Square(5.0);
+  std::vector<Rectangle*> vec;
+  vec.push_back(r0);
+  vec.push_back(r1);
+  std::vector<Rectangle*> dst;
+  SUBCASE("sumAreas:") {
+    CHECK(sumAreas(vec) == 31.0);
+  }
+  SUBCASE("incAreas:") {
+    incAreas(vec, dst, 1.1);
+    CHECK(sumAreas(dst) == 1.1 * 31.0);
+    for (Rectangle* r: dst) { // Clear the data, after you are done with it!
+      delete r;
+    }
+  }
+  delete r0;
+  delete r1;
+}
+
+* Can you think about other solutions to this problem of Rectangles and
+  Squares?
+- We could change the modeling. Instead of having a Square to extend the
+  Rectangle, we could have the Rectangle extending the Square.
+
+* Would this solution above work well? Can you try it?
+
+=== Inheritance: when to use it? ===
+
+* Ideally, we should avoid inheritance if the subclass can change state of
+  the superclass. Why?
+
+* Is it always safe to extend immutable data?
+- Well, not really.
+
+* Can you give an example of something that can go wrong?
+
+* Consider the class below. What does it represent?
+class Integer {
+  public:
+    Integer(unsigned long i, bool positive=true): _i(i), _positive(positive) {}
+    virtual Integer inv() const {
+      return Integer(_i, !_positive);
+    }
+    bool operator == (const Integer& i) const {
+      return i._i == _i && i._positive == _positive;
+    }
+    std::string toString () const {
+      return (_positive ? "+" : "-") + std::to_string(_i);
+    }
+  private:
+    const unsigned long _i;
+    const bool _positive;
+};
+
+* Can you extend it to have a class of natural numbers?
+
+class Natural: public Integer {
+  public:
+    Natural(unsigned long i): Integer(i) {}
+    Integer inv() const {
+      throw "Natural numbers don't have inverses.";
+    }
+};
+
+* What is the problem with this model?
+
+* Can you write a function to negate a set of Integer instances? Start with the
+  test:
+
+TEST_CASE("Negating a set of Integers:") {
+  const int TEST_SIZE = 10;
+  std::vector<Integer*> ints;
+  for (int i = 0; i < TEST_SIZE; i++) {
+    ints.push_back(new Integer(i, true));
+  }
+  std::vector<Integer*> negs;
+  neg(ints, negs);
+  for (int i = 0; i < TEST_SIZE; i++) {
+    CHECK(*ints[i]->inv() == *negs[i]);
+  }
+  for (int i = 0; i < TEST_SIZE; i++) {
+    delete ints[i];
+    delete negs[i];
+  }
+}
+
+* Can you now implement the neg function?
+
+void neg(std::vector<Integer*>& src, std::vector<Integer*>& dst) {
+  dst.clear();
+  for (Integer* i: src) {
+    dst.push_back(i->inv());
+  }
+}
+
+* What if we tried to negate Naturals, what would happen? What would be the
+  result of the test below?
+
+TEST_CASE("Negating natural numbers:") {
+  const int TEST_SIZE = 10;
+  std::vector<Integer*> ints;
+  for (int i = 0; i < TEST_SIZE; i++) {
+    ints.push_back(new Natural(i));
+  }
+  std::vector<Integer*> negs;
+  neg(ints, negs);
+  for (int i = 0; i < TEST_SIZE; i++) {
+    CHECK(*ints[i]->inv() == *negs[i]);
+  }
+  for (int i = 0; i < TEST_SIZE; i++) {
+    delete ints[i];
+    delete negs[i];
+  }
+}
+
+* Is Natural a good extension of Integer?
+
+* What is the problem with this modeling?
+- We are removing a valid property of Integer, e.g., neg. Code that expects
+  Integers should be able to apply neg on them. We are breaking the contract
+  of this code, because we are not meeting its pre-conditions.
+
+* So, what's the pre-condition expected by the neg function?
+- That its inputs be "negatable".
+
+* Is this pre-condition met by Naturals?
