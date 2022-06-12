@@ -1,0 +1,343 @@
+=== Namespaces ===
+
+* What is a class?
+- The implementation of an abstract data type.
+
+* Is there any kind of module larger than a class in C++?
+- namespaces!
+
+* What about other languages, e.g., Java, for instance?
+- packages.
+
+* What is "std" in "std::cout"?
+- This is a namespace.
+
+* What is a namespace in C++?
+- It's a way to give a 'surname' to program names
+- We can think on a namespace as a class that cannot be instantiated
+
+* Can you show an example of use of namespace?
+
+#include <iostream>
+using namespace std;
+namespace first {
+  int var = 5;
+}
+namespace second {
+  double var = 3.1416;
+}
+int main () {
+  cout << first::var << endl;
+  cout << second::var << endl;
+  return 0;
+}
+
+* Can we have multiple namespaces in the same program?
+
+#include <iostream>
+using namespace std;
+namespace first {
+  int x = 5;
+  int y = 10;
+}
+namespace second {
+  double x = 3.1416;
+  double y = 2.7183;
+}
+int main () {
+  using first::x;
+  using second::y;
+  cout << x << endl;
+  cout << y << endl;
+  cout << first::y << endl;
+  cout << second::x << endl;
+  return 0;
+}
+
+* What is the difference between instantiable and uninstantiable namespaces?
+
+* Can you give examples in Java?
+Instantiable: class
+Unistantiable: static class, package
+
+* Can you give examples in C++?
+Instantiable: class, struct, union
+Unistantiable: namespace
+
+* Can we have namespaces spanning multiple files?
+
+// ClassDefs.h:
+#ifndef CLASS_DEFS_H
+#define CLASS_DEFS_H
+namespace PDS_II {
+  struct A {
+    int x, y;
+    void setX(int);
+    void setY(int);
+  };
+  struct B {
+    double a, b;
+    double getSum() const;
+  };
+}
+#endif
+// ClassDefs_A.cpp:
+#include "ClassDefs.h"
+namespace PDS_II {
+  void A::setX(int x) {
+    this->x = x;
+  }
+  void A::setY(int y) {
+    this->x = y > 0 ? y : 0;
+  }
+}
+// ClassDefs_B.cpp:
+#include "ClassDefs.h"
+namespace PDS_II {
+  double B::getSum() const {
+    return a + b;
+  }
+}
+// Main.cpp:
+#include <iostream>
+#include "ClassDefs.h"
+int main() {
+  PDS_II::A a;
+  a.x = 1;
+  std::cout << a.x << std::endl;
+}
+
+=== The Compilation Process ===
+
+* What is the life cycle of a program?
+- Write the program using a text editor.
+- Compile the program to machine code:
+  - Compile the program to assembly.
+  - Translate assembly to machine code.
+  - Link with libraries.
+  - Load program in memory, and replace names with addresses.
+- Debug the program.
+
+* What is the sequence of transformations that the program will suffer?
+
+[editor] --> source file --> [preprocessor] --> preprocessed source file
+--> [compiler] --> assembly language file --> [assembler] -->
+object file --> [linker] --> executable file -->
+[loader] --> running program in memory
+
+* Can you show the preprocessed version of ClassDefs_A.cpp?
+
+$> clang++ -E ClassDefs_A.cpp > ClassDefs_A_prep.cpp
+
+* Is the preprocessed program in binary format or in text format (ASCII)?
+
+* Which actions are executed by the preprocessor?
+
+* What if ClassDefs.h is in a folder called "include"?
+
+$> clang++ -E ClassDefs_A.cpp -Iinclude
+
+* Can you show the assembly code of ClassDefs_A.cpp?
+
+$> clang++ -S ClassDefs_A.cpp -Iinclude
+
+* Is the assembly program in binary format or in text format (ASCII)?
+
+* Can you produce the object file of ClassDefs_A.cpp?
+
+$> clang++ -c ClassDefs_A.cpp -Iinclude
+
+* Is the object file in binary format or in text format (ASCII)?
+
+* How can you link all the object files into an executable?
+
+$> clang++ ClassDefs_A.o ClassDefs_B.o Main.o -o Main.exe
+
+=== Makefile ===
+
+* How can we compile all these files?
+
+clang++ Main.cpp ClassDefs_A.cpp ClassDefs_B.cpp
+
+* What if we change one of these files, will we have to compile them all again?
+- Yes, unfortunately
+
+* Is there a way to avoid recompilation of unmodified files?
+- Yes! We can use a Makefile
+- http://www.cs.colby.edu/maxwell/courses/tutorials/maketutor/
+
+* Can you move all the commands used to compile the program into a Makefile?
+
+$> cat Makefile
+classdef: ClassDefs_A.cpp ClassDefs_B.cpp Main.cpp
+	clang++ -o Main.exe ClassDefs_A.cpp ClassDefs_B.cpp Main.cpp
+
+* How can we use the Makefile?
+
+$> make
+
+* Notice that each command line must start with a tab, i.e., '\t'
+
+* What's "classdef" in the Makefile?
+
+* If we type 'make' twice, will recompilation happen?
+
+$> ls -l Main.exe 
+-rwxr-xr-x  1 fernando  staff  10100 Mar 10 13:06 Main.exe
+$> make
+$> ls -l Main.exe 
+-rwxr-xr-x  1 fernando  staff  10100 Mar 10 13:09 Main.exe
+
+* How can you reduce this problem? (Mind it: I am saying "Reduce")
+
+CXX=clang++
+classdef: ClassDefs_A.o ClassDefs_B.o Main.o
+        $(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+
+* What is the first line doing? E.g., "CPP=clang++"
+
+* Do you avoid recompilation?
+- We avoid recompilation of the .o files (which are the compiled files)
+
+$> make
+c++    -c -o ClassDefs_A.o ClassDefs_A.cpp
+c++    -c -o ClassDefs_B.o ClassDefs_B.cpp
+c++    -c -o Main.o Main.cpp
+clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+$> ls -la *.o
+-rw-r--r--  1 fernando  staff   828 Mar 10 13:13 ClassDefs_A.o
+-rw-r--r--  1 fernando  staff   644 Mar 10 13:13 ClassDefs_B.o
+-rw-r--r--  1 fernando  staff  2772 Mar 10 13:13 Main.o
+$> ls -la *.exe
+-rwxr-xr-x  1 fernando  staff  10100 Mar 10 13:13 Main.exe
+$> make
+clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+$> ls -la *.o
+-rw-r--r--  1 fernando  staff   828 Mar 10 13:13 ClassDefs_A.o
+-rw-r--r--  1 fernando  staff   644 Mar 10 13:13 ClassDefs_B.o
+-rw-r--r--  1 fernando  staff  2772 Mar 10 13:13 Main.o
+$> ls -la *.exe
+-rwxr-xr-x  1 fernando  staff  10100 Mar 10 13:14 Main.exe
+
+* What if we change just one of the cpp files, e.g., ClassDefs_A.cpp?
+
+$> make
+c++    -c -o ClassDefs_A.o ClassDefs_A.cpp
+clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+$> ls -la *.o
+-rw-r--r--  1 fernando  staff   828 Mar 10 13:15 ClassDefs_A.o
+-rw-r--r--  1 fernando  staff   644 Mar 10 13:13 ClassDefs_B.o
+-rw-r--r--  1 fernando  staff  2772 Mar 10 13:13 Main.o
+
+* What happens if I change the .h file? For instance:
+
+struct A {
+  int x, y;
+  A(int xx, int yy): x(xx), y(yy) {}
+  void setX(int);
+  void setY(int);
+};
+
+* Why is the program not recompiled?
+
+* How can we fix this issue?
+
+CXX      = clang++
+DEPS     = ClassDefs.h
+%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $<
+classdef: ClassDefs_A.o ClassDefs_B.o Main.o
+        $(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+
+* What is "$@"?
+- This is the left side of the ":". In this example, it is xxxxx in xxxxx.o,
+  for each object file that we can generate.
+
+* What is "$<"
+- This is the first item in the dependencies list, e.g., "ClassDefs.h"
+
+* We can make the Makefile more general using the macro "$^":
+
+CXX      = clang++
+DEPS     = ClassDefs.h
+OBJ      = ClassDefs_A.o ClassDefs_B.o Main.o
+%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $<
+Main: $(OBJ)
+        $(CXX) -o $@.exe $^
+
+* What is this macro?
+- It denotes the right side of the ":"
+
+* Why we have changed the target of the rule from "classdef" into "Main"?
+- To have the executable called Main.exe
+
+* Why do we have so many ".o" files in our folder?
+
+$> ls *.o
+ClassDefs_A.o	ClassDefs_B.o	Main.o
+
+* How can we remove them?
+
+CXX      = clang++
+DEPS     = ClassDefs.h
+ODIR     = ObjectFiles
+OBJ      = $(ODIR)/ClassDefs_A.o $(ODIR)/ClassDefs_B.o $(ODIR)/Main.o
+$(ODIR)/%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $<
+Main: $(OBJ)
+        $(CXX) -o $@.exe $^
+
+* Remember: you need to mkdir a folder called "ObjectFiles" for this Makefile
+  to work correctly.
+
+* But, now we have ODIR everywhere. How can we refactor this name out?
+
+CXX      = clang++
+DEPS     = ClassDefs.h
+ODIR     = ObjectFiles
+_OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
+OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
+$(ODIR)/%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $<
+Main: $(OBJ)
+        $(CXX) -o $@.exe $^
+
+* Can you explain what "$(patsubst %, $(ODIR)/%, $(_OBJ))" is doing?
+- It is replacing every occurrence of %, which is anything in the list _OBJ,
+  with the pattern "$(ODIR)/%"
+
+* Could you augment this Makefile with code to clean up the files, e.g., to
+  remove the object and executable files?
+
+CXX      = clang++
+DEPS     = ClassDefs.h
+ODIR     = ObjectFiles
+_OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
+OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
+$(ODIR)/%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $<
+Main: $(OBJ)
+        $(CXX) -o $@.exe $^ 
+clean:
+        $(RM) $(OBJ) $(DEPENDS) Main.exe
+
+* How can we use the command "clean" above?
+
+$> make clean
+
+* What if the header files were in a separate folder like "include/ClassDefs.h"?
+
+CXX      = clang++
+IDIR     = include
+DEPS     = $(IDIR)/ClassDefs.h
+CXXFLAGS = -I$(IDIR)
+ODIR     = ObjectFiles
+_OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
+OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
+$(ODIR)/%.o: %.cpp $(DEPS)
+        $(CXX) -c -o $@ $< $(CXXFLAGS)
+Main: $(OBJ)
+        $(CXX) -o $@.exe $^ 
+clean:
+        $(RM) $(OBJ) $(DEPENDS) Main.exe
