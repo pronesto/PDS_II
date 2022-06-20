@@ -181,6 +181,67 @@ $> clang++ ClassDefs_A.o ClassDefs_B.o Main.o -o Main.exe
 
 === Makefile ===
 
+* What are the dependencies necessary to compile these files below?
+
+// ClassDefs.hpp
+#ifndef CLASS_DEFS_H
+#define CLASS_DEFS_H
+namespace PDS_II {
+  struct A {
+    int x, y;
+    void setX(int);
+    void setY(int);
+  };
+
+  struct B {
+    double a, b;
+    double getSum() const;
+  };
+}
+#endif
+
+// ClassDefs_A.cpp:
+#include "ClassDefs.hpp"
+namespace PDS_II {
+  void A::setX(int x) {
+    this->x = x;
+  }
+  void A::setY(int y) {
+    this->x = y > 0 ? y : 0;
+  }
+}
+
+// ClassDefs_B.cpp:
+#include "ClassDefs.hpp"
+namespace PDS_II {
+  double B::getSum() const {
+    return a + b;
+  }
+}
+
+// Main.cpp:
+#include <iostream>
+#include "ClassDefs.hpp"
+int main() {
+  PDS_II::A a;
+  a.x = 1;
+  std::cout << a.x << std::endl;
+}
+
+* What would be a Makefile that reflects these dependencies?
+
+Main: ClassDefs_A.o ClassDefs_B.o Main.o
+	clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+
+ClassDefs_A.o: ClassDefs_A.cpp ClassDefs.hpp
+	clang++ -c -o ClassDefs_A.o ClassDefs_A.cpp
+
+ClassDefs_B.o: ClassDefs_B.cpp ClassDefs.hpp
+	clang++ -c -o ClassDefs_B.o ClassDefs_B.cpp
+
+Main.o: Main.cpp ClassDefs.hpp
+	clang++ -c -o Main.o Main.cpp
+
 * How can we compile all these files?
 
 clang++ Main.cpp ClassDefs_A.cpp ClassDefs_B.cpp
@@ -216,9 +277,11 @@ $> ls -l Main.exe
 
 * How can you reduce this problem? (Mind it: I am saying "Reduce")
 
-CXX=clang++
+CXX  = clang++
+%.o: %.cpp
+	$(CXX) -c -o $@ $<
 classdef: ClassDefs_A.o ClassDefs_B.o Main.o
-        $(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+	$(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
 
 * What is the first line doing? E.g., "CPP=clang++"
 
@@ -269,11 +332,15 @@ struct A {
 
 * How can we fix this issue?
 
-CXX      = clang++
-%.o: %.cpp
-        $(CXX) -c -o $@ $<
+CXX  = clang++
+
+DEPS = ClassDefs.hpp
+
+%.o: %.cpp $(DEPS)
+	$(CXX) -c -o $@ $<
+
 classdef: ClassDefs_A.o ClassDefs_B.o Main.o
-        $(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+	$(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
 
 * What is "$@"?
 - $@ is the name of the file to be made.
@@ -287,8 +354,9 @@ classdef: ClassDefs_A.o ClassDefs_B.o Main.o
 * We can make the Makefile more general using the macro "$^":
 
 CXX      = clang++
+DEPS = ClassDefs.hpp
 OBJ      = ClassDefs_A.o ClassDefs_B.o Main.o
-%.o: %.cpp
+%.o: %.cpp $(DEPS)
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^
@@ -308,9 +376,10 @@ ClassDefs_A.o	ClassDefs_B.o	Main.o
 * How can we remove them?
 
 CXX      = clang++
+DEPS     = ClassDefs.hpp
 ODIR     = ObjectFiles
 OBJ      = $(ODIR)/ClassDefs_A.o $(ODIR)/ClassDefs_B.o $(ODIR)/Main.o
-$(ODIR)/%.o: %.cpp
+$(ODIR)/%.o: %.cpp $(DEPS)
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^
