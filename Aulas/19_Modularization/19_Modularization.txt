@@ -66,7 +66,7 @@ Unistantiable: namespace
 
 * Can we have namespaces spanning multiple files?
 
-// ClassDefs.h:
+// ClassDefs.hpp:
 #ifndef CLASS_DEFS_H
 #define CLASS_DEFS_H
 namespace PDS_II {
@@ -81,8 +81,9 @@ namespace PDS_II {
   };
 }
 #endif
+
 // ClassDefs_A.cpp:
-#include "ClassDefs.h"
+#include "ClassDefs.hpp"
 namespace PDS_II {
   void A::setX(int x) {
     this->x = x;
@@ -91,21 +92,46 @@ namespace PDS_II {
     this->x = y > 0 ? y : 0;
   }
 }
+
 // ClassDefs_B.cpp:
-#include "ClassDefs.h"
+#include "ClassDefs.hpp"
 namespace PDS_II {
   double B::getSum() const {
     return a + b;
   }
 }
+
 // Main.cpp:
 #include <iostream>
-#include "ClassDefs.h"
+#include "ClassDefs.hpp"
 int main() {
   PDS_II::A a;
   a.x = 1;
   std::cout << a.x << std::endl;
 }
+
+* Show an example that applies the :: operator to a class and to a namespace:
+
+#include <iostream>
+class X {
+  public:
+    static double mul(double a, double b) {
+      return a * b;
+    } 
+};
+namespace Y {
+  double mul(double a, double b) {
+    return a * b;
+  } 
+}
+int main() {
+  std::cout << X::mul(3.14, 2.71) << std::endl;
+  std::cout << Y::mul(3.14, 2.71) << std::endl;
+  return 0;
+}
+
+* What would be the difference between a class where all the methods are static and
+  a namespace?
 
 === The Compilation Process ===
 
@@ -233,6 +259,7 @@ $> ls -la *.o
 
 struct A {
   int x, y;
+  A(): x(0), y(0) {}
   A(int xx, int yy): x(xx), y(yy) {}
   void setX(int);
   void setY(int);
@@ -243,31 +270,32 @@ struct A {
 * How can we fix this issue?
 
 CXX      = clang++
-DEPS     = ClassDefs.h
-%.o: %.cpp $(DEPS)
+%.o: %.cpp
         $(CXX) -c -o $@ $<
 classdef: ClassDefs_A.o ClassDefs_B.o Main.o
         $(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
 
 * What is "$@"?
+- $@ is the name of the file to be made.
 - This is the left side of the ":". In this example, it is xxxxx in xxxxx.o,
   for each object file that we can generate.
 
 * What is "$<"
-- This is the first item in the dependencies list, e.g., "ClassDefs.h"
+- $< the name of the related file that caused the action.
+- This is the first item after the ":", e.g., "ClassDefs_A.cpp"
 
 * We can make the Makefile more general using the macro "$^":
 
 CXX      = clang++
-DEPS     = ClassDefs.h
 OBJ      = ClassDefs_A.o ClassDefs_B.o Main.o
-%.o: %.cpp $(DEPS)
+%.o: %.cpp
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^
 
-* What is this macro?
-- It denotes the right side of the ":"
+* What is this macro $^?
+- It denotes the right side of the ":". In this case, that's $(OBJ), which is
+  "ClassDefs_A.o ClassDefs_B.o Main.o"
 
 * Why we have changed the target of the rule from "classdef" into "Main"?
 - To have the executable called Main.exe
@@ -280,10 +308,9 @@ ClassDefs_A.o	ClassDefs_B.o	Main.o
 * How can we remove them?
 
 CXX      = clang++
-DEPS     = ClassDefs.h
 ODIR     = ObjectFiles
 OBJ      = $(ODIR)/ClassDefs_A.o $(ODIR)/ClassDefs_B.o $(ODIR)/Main.o
-$(ODIR)/%.o: %.cpp $(DEPS)
+$(ODIR)/%.o: %.cpp
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^
@@ -294,11 +321,10 @@ Main: $(OBJ)
 * But, now we have ODIR everywhere. How can we refactor this name out?
 
 CXX      = clang++
-DEPS     = ClassDefs.h
 ODIR     = ObjectFiles
 _OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
 OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
-$(ODIR)/%.o: %.cpp $(DEPS)
+$(ODIR)/%.o: %.cpp
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^
@@ -311,16 +337,15 @@ Main: $(OBJ)
   remove the object and executable files?
 
 CXX      = clang++
-DEPS     = ClassDefs.h
 ODIR     = ObjectFiles
 _OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
 OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
-$(ODIR)/%.o: %.cpp $(DEPS)
+$(ODIR)/%.o: %.cpp
         $(CXX) -c -o $@ $<
 Main: $(OBJ)
         $(CXX) -o $@.exe $^ 
 clean:
-        $(RM) $(OBJ) $(DEPENDS) Main.exe
+        $(RM) $(OBJ) Main.exe
 
 * How can we use the command "clean" above?
 
@@ -335,9 +360,9 @@ CXXFLAGS = -I$(IDIR)
 ODIR     = ObjectFiles
 _OBJ     = ClassDefs_A.o ClassDefs_B.o Main.o
 OBJ      = $(patsubst %, $(ODIR)/%, $(_OBJ))
-$(ODIR)/%.o: %.cpp $(DEPS)
+$(ODIR)/%.o: %.cpp
         $(CXX) -c -o $@ $< $(CXXFLAGS)
 Main: $(OBJ)
         $(CXX) -o $@.exe $^ 
 clean:
-        $(RM) $(OBJ) $(DEPENDS) Main.exe
+        $(RM) $(OBJ) Main.exe
