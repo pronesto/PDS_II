@@ -1,0 +1,367 @@
+* O que seria um ciclo de desenvolvimento voltado para testes?
+1. Escreva o teste.
+2. Escreva o código que compila.
+3. Faça o código passar no teste.
+4. Revise e refatore o código.
+5. Comente o código (incluindo o teste).
+
+* Vamos fazer uma lista de itens que poderíamos revisar em um código?
+- Marcar métodos const sempre que possível.
+- Usar convenções adequada para os nomes: camel notation, snake notation, etc.
+- Indentar o código.
+- Escrever métodos pequenos.
+- Declarar variáveis próximas dos usos.
+- Escrever linhas curtas.
+- Evitar código duplicado.
+- Usar asserções para garantir condições de entrada.
+- Verificar que os objetos criados no heap são eventualmente destruídos.
+- Garantir que cClasse que cria objeto o apaga sempre que possível.
+- Garantir que classe termina o uso de recursos no destrutor.
+- Usar o modificador override sempre que possível.
+- Marcar como privado o método que só é usado dentro da classe.
+- Estender somente classes abstratas.
+- Escrever métodos virtuais sem corpo sempre que possível.
+- Declarar objetos com o tipo mais abstrato possível.
+- Escrever classes com poucas responsabilidades.
+
+* Exemplo-1: escreva uma classe que passe no seguinte teste:
+
+void test00(LineAdder* o) {
+  o->add("2");
+  assert(o->get() == 2);
+  o->add("4");
+  assert(o->get() == 6);
+  o->add("four");
+  assert(o->get() == 6);
+  o->add("18");
+  assert(o->get() == 24);
+}
+
+int main() {
+  LineAdder* o = new LineAdder();
+  test00(o);
+  delete o;
+}
+
+* O que esse teste está fazendo?
+
+* Qual é a classe que passa nele?
+
+class LineAdder {
+  public:
+    LineAdder(): _acc(0) {}
+    void add(std::string s) {
+      bool eh_num = true;
+      for (char c: s) {
+        if (!isdigit(c)) {
+          eh_num = false;
+          break;
+        }
+      }
+      int num = eh_num ? std::stoi(s): 0;
+      _acc += num;
+    }
+
+    int get() const {
+      return _acc;
+    }
+  private:
+    int _acc;
+};
+
+* Agora, escreva uma classe que passe no seguinte teste:
+
+void test01(LineMax* o) {
+  o->add("aa");
+  assert(o->get() == 2);
+  o->add("abb");
+  assert(o->get() == 3);
+  o->add("a");
+  assert(o->get() == 3);
+  o->add("xx");
+  assert(o->get() == 3);
+}
+
+int main() {
+  LineMax* lm = new LineMax();
+  test01(lm);
+  delete lm;
+}
+
+* O que o teste faz?
+
+* Qual é essa classe?
+
+class LineMax {
+  public:
+    LineMax(): _acc(0) {}
+    void add(std::string s) {
+      int num = s.size();
+      _acc = num > _acc ? num: _acc;
+    }
+    int get() const {
+      return _acc;
+    }
+  private:
+    int _acc;
+};
+
+* Quais redundâncias existente nas classes LineMax e LineAdder?
+
+* Seria possível fatorar essas redundâncias?
+
+
+class Accumulator {
+  public:
+    Accumulator(): _acc(0) {}
+
+    virtual ~Accumulator() {}
+
+    virtual void add(std::string s) = 0;
+
+    int get() const {
+      return _acc;
+    }
+
+  protected:
+    int _acc;
+};
+
+class LineAdder: public Accumulator {
+  public:
+    void add(std::string s) {
+      bool eh_num = true;
+      for (char c: s) {
+        if (!isdigit(c)) {
+          eh_num = false;
+          break;
+        }
+      }
+      int num = eh_num ? std::stoi(s): 0;
+      _acc += num;
+    }
+};
+
+class LineMax: public Accumulator {
+  public:
+    void add(std::string s) {
+      int num = s.size();
+      _acc = num > _acc ? num: _acc;
+    }
+};
+
+* É necessário modificar os testes?
+
+* E como ficaria a função "main"?
+
+int main() {
+  Accumulator* a = new LineAdder();
+  test00(a);
+  delete a;
+
+  a = new LineMax();
+  test01(a);
+  delete a;
+}
+
+* Escreva então uma classe que passe no seguinte teste:
+
+void test02(Accumulator* o) {
+  o->add("aa");
+  assert(o->get() == 2);
+  o->add("abb");
+  assert(o->get() == 5);
+  o->add("a");
+  assert(o->get() == 6);
+  o->add("xx");
+  assert(o->get() == 8);
+}
+
+int main() {
+  Accumulator* a = new LineLenAdder();
+  test02(a);
+  delete a;
+}
+
+* O que o teste faz?
+
+* Qual é essa classe?
+
+class LineLenAdder: public Accumulator {
+  public:
+    void add(std::string s) {
+      int num = s.size();
+      _acc += num;
+    }
+};
+
+* Finalmente, escreva uma classe que passe no seguinte teste:
+
+void test03(Accumulator* o) {
+  o->add("2");
+  assert(o->get() == 2);
+  o->add("40");
+  assert(o->get() == 40);
+  o->add("four");
+  assert(o->get() == 40);
+  o->add("18");
+  assert(o->get() == 40);
+}
+
+int main() {
+  Accumulator* a = new LineNumMax();
+  test03(a);
+  delete a;
+}
+
+* O que o teste faz?
+
+* Qual é essa classe?
+
+class LineNumMax: public Accumulator {
+  public:
+    void add(std::string s) {
+      bool eh_num = true;
+      for (char c: s) {
+        if (!isdigit(c)) {
+          eh_num = false;
+          break;
+        }
+      }
+      int num = eh_num ? std::stoi(s): 0;
+      _acc = num > _acc ? num: _acc;
+    }
+};
+
+* Temos quatro classes. Poderíamos achar melhores nomes para elas?
+
+int main() {
+  Accumulator* a = new LineAdder();
+  test00(a);
+  delete a;
+    
+  a = new LineMax();
+  test01(a);
+  delete a;
+
+  a = new LineLenAdder();
+  test02(a);
+  delete a;
+    
+  a = new LineNumMax();
+  test03(a);
+  delete a;
+}
+
+* Que tal:
+
+int main() {
+  Accumulator* a = new LineNumAdder();
+  test00(a);
+  delete a;
+  
+  a = new LineLenMax();
+  test01(a);
+  delete a;
+  
+  a = new LineLenAdder();
+  test02(a);
+  delete a;
+  
+  a = new LineNumMax();
+  test03(a);
+  delete a;
+}
+
+* Existem redundâncias entre LineNumAdder, LineLenMax, LineLenAdder e LineNumMax?
+
+* Como poderíamos explorar essas redundâncias?
+
+class Transformer {
+  public:
+    virtual int transf(std::string& s) const = 0;
+};
+
+class Evaluator {
+  public:
+    virtual int eval(int num, int acc) const = 0;
+};
+
+class Accumulator {
+  public:
+    Accumulator(Transformer* t, Evaluator* e): _acc(0), _t(t), _e(e) {}
+
+    ~Accumulator() {
+      delete _t;
+      delete _e;
+    }
+
+    void add(std::string s) {
+      int num = _t->transf(s);
+      _acc = _e->eval(num, _acc);
+    }
+
+    int get() const {
+      return _acc;
+    }
+
+  private:
+    int _acc;
+    Transformer* _t;
+    Evaluator* _e;
+};
+
+* O que seriam subclasses de Transformer?
+
+class LineNum: public Transformer {
+  public:
+    int transf(std::string& s) const {
+      for (char c: s) {
+        if (!isdigit(c)) {
+          return 0;
+        }
+      }
+      return std::stoi(s);
+    }
+};
+
+class LineLen: public Transformer {
+  public:
+    int transf(std::string& s) const {
+      return s.size();
+    }
+};
+
+* E o que seriam subclasses de Evaluator?
+
+class Add: public Evaluator {
+  public:
+    int eval(int num, int acc) const {
+      return num + acc;
+    }
+};
+
+class Max: public Evaluator {
+  public:
+    int eval(int num, int acc) const {
+      return num > acc ? num : acc;
+    }
+};
+
+* E como criar o código que passa nos testes?
+
+int main() {
+  Accumulator a0(new LineNum(), new Add());
+  test00(&a0);
+
+  Accumulator a1(new LineLen(), new Max());
+  test01(&a1);
+
+  Accumulator a2(new LineLen(), new Add());
+  test02(&a2);
+
+  Accumulator a3(new LineNum(), new Max());
+  test03(&a3);
+}
+
+* Foi necessário modificar os testes em algum momento?
