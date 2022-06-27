@@ -1,0 +1,503 @@
+* Como pegar erros de programação?
+
+1. Use asserções.
+2. Escreva testes.
+3. Use um depurador!
+4. Use valores pequenos para os testes.
+5. Escreva testes exaustivos!
+6. Remova pedaços do programa até que o erro pare de acontecer.
+
+* O que é um depurador de código?
+
+* Você poderia dar exemplos de depuradores?
+
+* Você consegue ver o erro do programa abaixo?
+
+// Challenge 0: we can find our the error by just looking at which line the program
+// stops:
+//
+#include <iostream>
+int main() {
+  int x = 4;
+  int *p;
+  *p = 3;
+  std::cout << x << ", " << *p << std::endl;
+  return 0;
+}
+
+* Como compilar esse programa para que ele possa ser depurado?
+
+$> clang++ -g Bug0.cpp
+- or -
+$> g++ -g Bug0.cpp
+
+* E como invocar o depurador sobre esse programa?
+
+$> lldb a.out
+
+* Uma vez em modo de depuração, como executar o programa?
+
+(lldb) run
+
+* Como interpretar a mensagem de erro? Em qual linha o erro ocorreu?
+thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+
+* Como ver a linha em que o erro aconteceu?
+
+(lldb) f
+
+* Como sair do depurador?
+
+(lldb) q
+
+* Como consertar o erro?
+
+int main() {
+  int x = 4;
+  int *p = &x;
+  *p = 3;
+  std::cout << x << ", " << *p << std::endl;
+  return 0;
+}
+
+* Nesse caso, o que ocorre se executarmos o programa no depurador?
+Process 11166 exited with status = 0 (0x00000000)
+
+* Seria possível pegarmos o erro no programa original via aviso de compilação?
+
+$> clang++ -g -Wall Bug0.cpp
+
+Bug0.cpp:6:4: warning: variable 'p' is uninitialized when used here [-Wuninitialized]
+
+* Considere o programa abaixo. Esse programa possui um erro. Mas o teste pega esse
+  erro?
+
+// Challenge 1: We need to stop execution and print the value of at least one
+// variable to observe the error:
+//
+#include <iostream>
+void sum(int* s, int* a, int* b) {
+  *s = *a + *b;
+}
+int main() {
+  int x = 2;
+  int y = 3;
+  int total = 0;
+  sum(&x, &y, &total);
+  assert(total = x + y);
+}
+
+* Como poderíamos usar o depurador para observar o erro?
+
+$> clang++ -g Bug1.cpp
+$> lldb a.out
+(lldb) b 12
+(lldb) run
+(lldb) p x
+(lldb) f # will only show five lines...
+
+* Como ver mais linhas?
+
+(lldb) source list -l 1
+
+* Considere o programa abaixo. Qual é o problema com esse programa?
+
+// Challenge 2: We need to step through the execution while showing the values of
+// the variables.
+//
+#include <iostream>
+#define ARRAY_SIZE 4
+int main() {
+  int x[5] = {2, 3, 5, 7};
+  int sum = 0;
+  for (int i = ARRAY_SIZE - 1; i > 0; --i) {
+    sum += x[i];
+  }
+  assert(sum == 17);
+  return 0;
+}
+
+* Como poderíamos observar esse erro?
+
+$> clang++ -g Bug2.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) run
+(lldb) next
+(lldb) display sum
+(lldb) next
+(lldb) display i
+(lldb) next ...
+
+* Considere o programa abaixo. Ele passa na asserção?
+
+// Challenge 3: change the value of a variable to see if the new value lets the
+// program pass the assertion test.
+//
+#include <iostream>
+#define ARRAY_SIZE 4
+int main() {
+  int x[5] = {2, 3, 5, 7};
+  int begin = 1;
+  int end = 2;
+  int sum = 0;
+  for (int i = begin; i < end; i++) {
+    sum += x[i];
+  }
+  assert(sum == 8);
+  return 0;
+}
+
+* Como descobrir o erro?
+
+$> clang++ -g Bug2.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) run
+(lldb) next
+(lldb) display sum
+(lldb) display end
+(lldb) display i
+(lldb) next
+(lldb) expr end = 3
+(lldb) next ...
+
+* Quais funcionalidades um depurador deveria ter para podermos inspecionar funções?
+
+// Challenge 4: step within a function and inspect the function frames to find out
+// why a program is looping.
+//
+#include <iostream>
+void recurse(int x) {
+  if (x == 0) {
+    std::cout << "Fim!" << std::endl;
+  }
+  recurse(x-1);
+}
+int main() {
+  recurse(3);
+  return 0;
+}
+
+> clang++ -g Bug4.cpp
+$> lldb a.out
+(lldb) b 5 # The line where we have the std::cout statement
+(lldb) run
+(lldb) step, ...
+(lldb) bt
+
+* Considere o programa abaixo. Qual problema ele tem?
+
+// Challenge 5: pass an argument to the debugger to find out an error condition.
+//
+#include <vector>
+#include <iostream>
+int max(std::vector<int>& v) {
+  int ans = v[0];
+  for (int i = 0; i < v.size(); i++) {
+    if (v[i] > ans) {
+      ans = v[i];
+    }
+  }
+  return ans;
+}
+int main() {
+  std::vector<int> v;
+  int num;
+  while (std::cin >> num) {
+    v.push_back(num);
+  }
+  std::cout << max(v) << std::endl;
+}
+
+* Como poderíamos passar um argumento para o depurador?
+
+> clang++ -g Bug5.cpp
+$> lldb a.out
+(lldb) process launch -i bug5.txt
+
+* Considere a implementação abaixo, de fatorial. Existe algum problema com ela?
+
+#include <iostream>
+int fact(int n) {
+  return n ? n * fact(n-1) : 1;
+}
+int main() {
+  int n = 0;
+  while (std::cin >> n) {
+    std::cout << n << ": " << fact(n) << std::endl;
+  }
+  return 0;
+}
+
+* Como poderíamos ver se a função fact é chamada com algum valor negativo?
+
+> clang++ -g Bug6.cpp
+$> lldb a.out
+(lldb) b fact
+(lldb) breakpoint modify -c 'n < 0'
+(lldb) run
+3
+3: 6
+-1
+
+* Veja o programa abaixo, que calcula o maior divisor comum entre dois números.
+  Qual é o problema com esse programa?
+
+#include <iostream>
+int mdc(int m, int n) {
+  assert(n != 0);
+  if (m % n) {
+    return n;
+  } else {
+    return mdc(n, m - n);
+  } 
+} 
+int main() {
+  assert(mdc(24, 16) == 8);
+}
+
+$> clang++ -g Bug6.cpp
+$> lldb a.out
+(lldb) b mdc
+(lldb) run
+(lldb) continue # ???
+(lldb) run
+(lldb) next
+
+* E o programa abaixo, ele tem algum problema?
+
+#include <iostream>
+int mdc(int m, int n) {
+  assert(n != 0);
+  if (m % n == 0) {
+    return n;
+  } else {
+    return mdc(n, m - n);
+  }
+}
+int main() {
+  assert(mdc(24, 16) == 8);
+}
+
+* Como descobrir o problema?
+
+#include <iostream>
+int mdc(int m, int n) {
+  assert(n != 0);
+  if (m % n == 0) {
+    return n;
+  } else {
+    return mdc(n, m - n);
+  }
+}
+int main() {
+  int const NUM_TRIALS = 9;
+  for (int n = 2; n < NUM_TRIALS - 1; n++) {
+    for (int m = n + 1; m < NUM_TRIALS; m++) {
+      std::cout << m << ", " << n << std::endl;
+      std::cout << mdc(m, n) << std::endl;
+    }
+  }
+}
+
+* É possível parar mdc quando m == 7 e n == 2?
+
+$> clang++ -g Bug6.cpp
+$> lldb a.out
+(lldb) b mdc
+(lldb) breakpoint modify -c "m == 7 && n == 2"
+(lldb) run
+(lldb) next
+(lldb) display m
+(lldb) display n
+(lldb) step # And keep going, to see what happens.
+
+* Seria possível parar mdc simplesmente quando m < n?
+
+(lldb) b mdc
+(lldb) breakpoint modify -c 'm < n'
+(lldb) run
+(lldb) step
+
+* Seria possível ver a sequência de chamadas de função que culminou com a chamada
+  errada?
+
+(lldb) b mdc
+(lldb) breakpoint modify -c 'm < n'
+(lldb) run
+(lldb) step
+(lldb) bt
+(lldb) up
+(lldb) p n
+(int) $0 = 2
+(lldb) p (m - n)
+(int) $1 = 3
+(lldb) p m
+(int) $2 = 5
+
+* O que é um backtrace?
+
+* Como as funções organizam os dados na pilha?
+
+* E no final das contas, como poderíamos consertar o programa?
+
+int mdc(int m, int n) {
+  assert(n != 0);
+  if (m % n == 0) {
+    return n;
+  } else {
+    return m > n ? mdc(n, m - n) : mdc(n, m);
+  }
+}
+
+* Escreva um programa para alocar um buffer com o formato de CPFs. A posição dos
+  CPFs deve ser preenchida com '0'. Após cada CPF deve haver um ponto ('.'). Por
+  exemplo, para alocar um buffer para 3 CPFs, o seguinte arranjo deve ser criado:
+  "00000000000.00000000000.00000000000."
+
+* Considere o programa baixo, que reproduz a primeira tentativa. O que está
+  errado com esse programa?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 3;
+  const char SIZE_CPF = 12;
+  char buffer[NUM_CPFs * SIZE_CPF];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF; j++) {
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF] = '.';
+  }
+  buffer[NUM_CPFs * SIZE_CPF - 1] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+* O que facilitaria encontrar o erro?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 2; // Use smaller values!
+  const char SIZE_CPF = 3; // Use smaller values!
+  char buffer[NUM_CPFs * SIZE_CPF];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF; j++) {
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF] = '.';
+  }
+  buffer[NUM_CPFs * SIZE_CPF - 1] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+* Como poderíamos usar o depurador nesse caso?
+
+$> clang++ -g Bug10.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) run
+(lldb) ta st a -o "fr v" # Just to check all the variables at every stop point.
+(lldb) next
+
+* Você poderia tentar uma solução para o problema?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 2;
+  const char SIZE_CPF = 3;
+  char buffer[NUM_CPFs * SIZE_CPF];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF - 1; j++) { // only write up to -1 positions!
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF] = '.';
+  }
+  buffer[NUM_CPFs * SIZE_CPF - 1] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+$> clang++ -g Bug10.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) run
+(lldb) ta st a -o "fr v" # Just to check all the variables at every stop point.
+(lldb) next
+(lldb) expr (i+1) * SIZE_CPF
+(lldb) p buffer[2]
+'\0' # We are leaving a zero in the buffer.
+
+* Como poderíamos consertar o problema?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 2;
+  const char SIZE_CPF = 3;
+  char buffer[NUM_CPFs * SIZE_CPF];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF - 1; j++) {
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF - 1] = '.'; // Reduce the index here as well.
+  }
+  buffer[NUM_CPFs * SIZE_CPF - 1] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+* Mas agora não estamos imprimindo o último ponto. O que está acontecendo?
+
+$> clang++ -g Bug10.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) ta st a -o "fr v"
+(lldb) run
+(lldb) b 18
+(lldb) continue
+(lldb) next
+
+* Como podemos resolver o problema?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 2;
+  const char SIZE_CPF = 3;
+  char buffer[NUM_CPFs * SIZE_CPF + 1];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF - 1; j++) {
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF - 1] = '.';
+  }
+  buffer[NUM_CPFs * SIZE_CPF] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+* Está tudo resolvido? E se o programa fosse escrito assim?
+
+#include <iostream>
+int main() {
+  const char NUM_CPFs = 20;
+  const char SIZE_CPF = 12;
+  const char BUFFER_SIZE = NUM_CPFs * SIZE_CPF + 1;
+  char buffer[BUFFER_SIZE];
+  for (int i = 0; i < NUM_CPFs; i++) {
+    for (int j = 0; j < SIZE_CPF - 1; j++) {
+      buffer[i*SIZE_CPF + j] = '0';
+    }
+    buffer[(i+1)*SIZE_CPF - 1] = '.';
+  }
+  buffer[NUM_CPFs * SIZE_CPF] = '\0';
+  std::cout << buffer << std::endl;
+}
+
+* Você conseguiria usar lldb para ver o que está acontecendo de errado?
+
+$> clang++ -g Bug10.cpp
+$> lldb a.out
+(lldb) b main
+(lldb) ta st a -o "fr v"
+(lldb) run
+(lldb) next
+(lldb) p (int)BUFFER_SIZE
+
+* Porque o valor de BUFFER_SIZE fica negativo?
