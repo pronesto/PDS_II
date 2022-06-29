@@ -1,0 +1,523 @@
+=== Software Testing ===
+
+* There are different ways to test software. Can you think about them?
+- White box: we test the internals of the program, e.g., its functions.
+- Black box: we don't know how the program works internally. We send it inputs,
+  and check its outputs.
+
+* In this course, we will focus on White Box Testing. Why?
+
+* There are different levels in which software can be tested. Can you think
+  about them?
+- Unit
+- Integration
+- System
+- Acceptance
+
+* What's unit testing?
+- We test individual operations of the program.
+- Tests are written by the developers themselves, while the program is
+  being implemented.
+
+* What's integration?
+- We test the interfaces between components. We need two or more components,
+  like functions or classes, to build a test.
+- We run an integration test before we commit new code to a program.
+
+* What's system testing?
+- We test the entire program, to see if it meets its original requirements.
+
+* What's acceptance testing?
+- We test the program with its end-users.
+- We deploy the program in its runtime environment.
+- There are interactions with people external to the process of code development.
+
+* When do we write the unit tests? Before or after the code is developed?
+
+* Are there advantages in writing unit tests before we develop the unit itself?
+
+* Have you heard of extreme programming?
+
+=== Example: Testing a Factorial ===
+
+* Let's try to write a test for a factorial function:
+
+#include <assert.h>
+void testFactorial() {
+  int t0 = factorial(1);
+  assert(t0 == 1 && "Error with factorial(1)");
+}
+int main() {
+  testFactorial();
+}
+
+* Can you write a factorial function that passes this test?
+
+int factorial(int number) {
+  return number <= 1 ? number : factorial(number - 1) * number;
+}
+
+* Can you make your tests a bit more general?
+
+#include <assert.h>
+#include <iostream> 
+int factorial(int number) {
+  return number <= 1 ? number : factorial(number - 1) * number;
+}
+void testFactorial(int in, int out) {
+  int t0 = factorial(in);
+  assert(t0 == out && "Error with factorial(1)");
+  std::cout << "factorial(" << in << ") PASS\n";
+}
+int main() {
+  testFactorial(1, 1);
+  testFactorial(2, 2);
+  testFactorial(3, 6);
+  testFactorial(10, 3628800);
+}
+
+* How could we improve further our little test framework?
+- Add statistics
+- Better printing
+
+* Have you heard of doctest?
+- It's a header file! https://raw.githubusercontent.com/onqtam/doctest/master/doctest/doctest.h
+
+* Can you write a doctest for the factorial function?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+int factorial(int number) {
+  return number <= 1 ? number : factorial(number - 1) * number;
+}
+TEST_CASE("testing the factorial function 1") {
+    CHECK(factorial(1) == 1);
+    CHECK(factorial(2) == 2);
+    CHECK(factorial(3) == 6);
+    CHECK(factorial(10) == 3628800);
+}
+
+* What if I change the test slightly, testing factorial(0)?
+
+TEST_CASE("testing the factorial function 2") {
+    CHECK(factorial(0) == 1);
+    CHECK(factorial(1) == 1);
+    CHECK(factorial(2) == 2);
+    CHECK(factorial(3) == 6);
+    CHECK(factorial(10) == 3628800);
+}
+
+* How can the report help us to identify the source of the error?
+
+main.cpp:9: ERROR: CHECK( factorial(0) == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+                 ^
+
+* How can we fix the factorial function to have it pass the test?
+
+int factorial(int number) {
+  return number > 1 ? factorial(number - 1) * number : 1;
+}
+
+* Where is the 'main' routine of the doctest file?
+
+* We can specify multiple cases inside the same test. Can you guess how the
+  test below works?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+#include <vector>
+TEST_CASE("vectors can be sized and resized") {
+  std::vector<int> v(5);
+  REQUIRE(v.size() == 5);
+  REQUIRE(v.capacity() >= 5);
+  SUBCASE("adding to the vector increases it's size") { // Subcase 1
+    v.push_back(1);
+    CHECK(v.size() == 6);
+    CHECK(v.capacity() >= 6);
+  }
+  SUBCASE("reserving increases just the capacity") { // Subcase 2
+    v.reserve(6);
+    CHECK(v.size() == 5);
+    CHECK(v.capacity() >= 6);
+  }
+}
+
+* Do you see that these subcases are independent?
+
+* What happens if a REQUIRE clauses fail?
+
+subcase1.cpp:7: FATAL ERROR: REQUIRE( v.capacity() >= 6 ) is NOT correct!
+  values: REQUIRE( 5 >= 6 )
+
+===============================================================================
+[doctest] test cases:      1 |      0 passed |      1 failed |      0 skipped
+[doctest] assertions:      2 |      1 passed |      1 failed |
+[doctest] Status: FAILURE!
+
+* And what happens if a subcase fails?
+
+subcase2.cpp:10: ERROR: CHECK( v.size() == 5 ) is NOT correct!
+  values: CHECK( 6 == 5 )
+===============================================================================
+[doctest] test cases:      1 |      0 passed |      1 failed |      0 skipped
+[doctest] assertions:      8 |      7 passed |      1 failed |
+[doctest] Status: FAILURE!
+
+* Why do we have eight assertions if we have only two REQUIREs and four CHECKs?
+
+* What do you think the program below will print?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+#include <iostream>
+using namespace std;
+
+TEST_CASE("lots of nested subcases") {
+  cout << endl << "root" << endl;
+  SUBCASE("") {
+    cout << "1" << endl;
+    SUBCASE("") { cout << "1.1" << endl; }
+  }
+  SUBCASE("") {
+    cout << "2" << endl;
+    SUBCASE("") { cout << "2.1" << endl; }
+    SUBCASE("") {
+      cout << "2.2" << endl;
+      SUBCASE("") {
+        cout << "2.2.1" << endl;
+        SUBCASE("") { cout << "2.2.1.1" << endl; }
+        SUBCASE("") { cout << "2.2.1.2" << endl; }
+      }
+    }
+    SUBCASE("") { cout << "2.3" << endl; }
+    SUBCASE("") { cout << "2.4" << endl; }
+  }
+}
+
+* Can you write a non-recursive factorial function?
+
+int whlFact(int number) {
+  int fact = 1;
+  while (number > 0) {
+    fact *= number--;
+  }
+  return fact;
+}
+
+* Can you write a test to compare the recursive and non-recursive functions?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+int whlFact(int number) {
+  int fact = 1;
+  while (number > 0) {
+    fact *= number--;
+  }
+  return fact;
+}
+int recFact(int number) {
+  return number > 1 ? recFact(number - 1) * number : 1;
+}
+TEST_CASE("Comparing the two factorial functions.") {
+  for (int i = 0; i < 5; i++) {
+    CHECK(whlFact(i) == recFact(i));
+  }
+}
+
+* We can add commands to print the state of variables, but that will happen
+  only if an assert fails. For instance, what will be printed by the test
+  below?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+int whlFact(int number) {
+  int fact = 1;
+  while (number > 0) {
+    fact *= number--;
+  }
+  return fact;
+}
+int recFact(int number) {
+  return number > 1 ? recFact(number - 1) * number : 1;
+}
+TEST_CASE("Comparing the two factorial functions.") {
+  for (int i = 0; i < 5; i++) {
+    INFO("Value of variable: " << i);
+    CHECK(whlFact(i) == recFact(i+1));
+  }
+}
+
+* If we fix the test, will the INFO macro print anything?
+
+TEST_CASE("Comparing the two factorial functions.") {
+  for (int i = 0; i < 5; i++) {
+    INFO("Value of variable: " << i);
+    CHECK(whlFact(i) == recFact(i));
+  }
+}
+
+* There is a quick way to print the value of variables:
+
+TEST_CASE("Comparing the two factorial functions.") {
+  for (int i = 0; i < 5; i++) {
+    CAPTURE(i);
+    CHECK(whlFact(i) == recFact(i));
+  }
+}
+
+* There is a macro, WARN, that does not count as a failed test, but reports
+  a problem, in case the problem happens:
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+int whlFact(int number) {
+  int fact = 1;
+  while (number > 0) {
+    fact *= number--;
+  }
+  return fact;
+}
+int recFact(int number) {
+  return number > 1 ? recFact(number - 1) * number : 1;
+}
+TEST_CASE("Comparing the two factorial functions.") {
+  for (int i = 0; i < 5; i++) {
+    WARN(whlFact(i) == recFact(i+1));
+  }
+}
+
+* So, what is the difference between REQUIRE, CHECK and WARN?
+- REQUIRE: stops the verification immediately
+- CHECK: fails the test, but continues testing
+- WARN: just report the error, without counting a failed test
+
+* What is the value that this function returns?
+
+long longRun(const unsigned N) {
+  long l = 0;
+  for (unsigned i = 0; i < N; i++) {
+    for (unsigned j = 0; j < N; j++) {
+      l++;
+    }
+  } 
+  return l;
+}
+
+* Can you write tests to check if you are correct?
+
+TEST_CASE("Naive multiplication") {
+  CHECK(longRun(0) == 0);
+  CHECK(longRun(1) == 1);
+  CHECK(longRun(2) == 4);
+  CHECK(longRun(3) == 9);
+}
+
+* Is this test going to pass?
+
+TEST_CASE("Naive multiplication") {
+  CHECK(longRun(10000) == 100000000);
+}
+
+* What about this test?
+
+TEST_CASE("Naive multiplication 2") {
+  CHECK(longRun(50000) == 2500000000);
+}
+
+* Is it possible to add a timeout to a test?
+
+TEST_CASE("Naive multiplication with timeout" * doctest::timeout(0.1)) {
+  CHECK(longRun(50000) == 2500000000);
+}
+
+* Does doctest::timeout terminate the test?
+- No! Timeout fails the test, but it does not terminate the test. The test will
+  run till termination.
+
+* Why would it be difficult to implement a macro that terminates the test if it
+  fails?
+- We would have to spawn a new thread, which would stop part of the execution of
+  the program, but not the entire program...
+
+=== Examples ===
+
+* Can you design a test that catches the problem with this program?
+
+int simpleSum() {
+  int a[1] = {17};
+  int b[1] = {19};
+  b[1] = 3;
+  return a[0] + b[0];
+}
+// Example solution:
+TEST_CASE("testing simpleSum") {
+    CHECK(simpleSum() == 36);
+}
+
+* Can you write a test to check if this code is correct?
+
+// If n > m, then return 2 + n, else return 2 + m
+int prec(int n, int m) {
+  return 2 + n > m ? n : m;
+}
+// Example solution:
+TEST_CASE("testing prec") {
+    CHECK(prec(10, 11) == 13);
+}
+
+* What about the program below: can you design a test to catch its problem?
+
+struct Data {
+  int x;
+};
+Data* getData(int value) {
+  Data d;
+  d.x = value;
+  return &d;
+}
+int simpleSum2() {
+  Data *d0 = getData(1);
+  Data *d1 = getData(2);
+  return d0->x + d1->x;
+}
+// Example solution:
+TEST_CASE("testing simpleSum2") {
+    CHECK(simpleSum2() == 3);
+}
+
+* Can you produce a test to catch the problem with the function below?
+
+// Finds if to_find exists in to_search. If not, return 0:
+int searchArray(int to_search[], int len, int to_find) {
+  int i;
+  for( i = 0; i < len; ++i) {
+    if ( to_search[i] == to_find) {
+      return i;
+    }
+  }
+}
+// Example solution:
+TEST_CASE("testing searchArray") {
+  const int N = 6;
+  int x[N] = {2, 3, 5, 7, 11, 13};
+  CHECK(searchArray(x, N, 8) == 0);
+}
+
+=== Exceptions (Extra material) ===
+
+
+* How could you test the function below?
+
+double div(double a, double b) {
+  if (!b) {
+    throw "Divisor cannot be zero!";
+  } else {
+    return a/b;
+  }
+}
+
+* Design a test to check the function 'div' under normal conditions:
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+double div(double a, double b) {
+  if (!b) {
+    throw "Divisor cannot be zero!";
+  } else {
+    return a/b;
+  }
+}
+TEST_CASE("Checking normal division.") {
+  CHECK(div(2.0, 1.0) == 2.0);
+}
+
+* Now, design a test to check the exceptional behavior.
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+double div(double a, double b) {
+  if (!b) {
+    throw "Divisor cannot be zero!";
+  } else {
+    return a/b;
+  }
+}
+TEST_CASE("Checking exceptional division.") {
+  CHECK_THROWS_AS(div(2.0, .0), const char*);
+}
+
+* What if div threw a user-defined Exception object? How would you catch it?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+#include <exception>
+class DivException: public std::exception {
+  private:
+    double _a;
+  public:
+    DivException(double a): _a(a) {}
+    virtual const char* what() const throw() {
+      std::string msg = "Division of " + std::to_string(_a) + " with zero";
+      return msg.c_str();
+    }
+};
+double div(double a, double b) {
+  if (!b) {
+    throw DivException(a);
+  } else {
+    return a/b;
+  }
+}
+TEST_CASE("Checking normal division.") {
+  CHECK(div(2.0, 1.0) == 2.0);
+}
+TEST_CASE("Checking exceptional division.") {
+  CHECK_THROWS_AS(div(2.0, .0), DivException);
+}
+
+* Can you add an error message to your exception?
+
+class DivException: public std::exception {
+  private:
+    double _a;
+  public:
+    DivException(double a): _a(a) {}
+    virtual const char* what() const throw() {
+      std::string msg = "Division of " + std::to_string(_a) + " with zero";
+      char* buf = (char*)malloc(80);
+      strcpy(buf, msg.c_str());
+      return buf;
+    }
+};
+
+* Why is it so complicated? Why do we need the buffer?
+- Because the string msg is allocated on the stack, and so is msg.c_str()
+
+* How can you catch this error message with a test?
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+#include <exception>
+class DivException: public std::exception {
+  private:
+    double _a;
+  public:
+    DivException(double a): _a(a) {}
+    virtual const char* what() const throw() {
+      std::string msg = "Division of " + std::to_string(_a) + " with zero";
+      char* buf = (char*)malloc(80);
+      strcpy(buf, msg.c_str());
+      return buf;
+    }
+};
+double div(double a, double b) {
+  if (!b) {
+    throw DivException(a);
+  } else {
+    return a/b;
+  }
+}
+TEST_CASE("Checking message of exceptional division.") {
+  CHECK_THROWS_WITH(div(2.0, .0), "Division of 2.000000 with zero");
+}
