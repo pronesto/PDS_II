@@ -1,0 +1,478 @@
+=== Exceptions ===
+
+* What are the shortcomings of using assertions?
+- Stop the program.
+- No chance to handle the error.
+
+* These problems can be solved with exceptions. What are exceptions?
+- An exception is a run-time event that may cause a routine call to fail
+
+* There exist exceptions from the programming language, and exceptions from
+  the software logic.
+
+* What are examples of exceptions from the programming language?
+- Calling a method on a null object.
+- Indexing an array out of bounds.
+- Cast classes of incompatible types.
+
+* Does C++ contain programming language exceptions?
+- Not really.
+
+* Which languages contain such exceptions
+- Almost every language, except C++ and C, e.g.: Java, Python, Kotlin, etc
+
+* What are exceptions of the software logic?
+- Errors that break pre-conditions
+- Errors that break post-conditions
+- Errors that break invariants
+
+* Exceptions consist of three parts, which ones?
+- Declaring
+- Throwing
+- Handling
+
+* How do we throw an exception in C++?
+
+// Ex0.cpp
+#include <iostream>
+using namespace std;
+
+int main () {
+  throw 20;
+}
+
+* How to catch an exception in C++?
+
+// ex1.cpp
+#include <iostream>
+int main () {
+  try {
+    throw 20;
+  } catch (int e) {
+    std::cout << "An exception occurred. Exception Nr. " << e << std::endl;
+  }
+  return 0;
+}
+
+* The example above is not a good way to handle exceptions, is it?
+- Not really: we are handling the exception in the function where it happens.
+
+* How to declare a function that throws an exception?
+void foo() {
+  throw 1;
+}
+
+* Write a function that returns the sum of two characters (char). If there is
+  an overflow, it should raise an exception that is the overflowed number:
+
+// ex2.cpp
+int sumChar(char a, char b) {
+  char sumC = a + b;
+  long sumL = a + b;
+  if (sumC != sumL) {
+    throw sumC;
+  } 
+  return sumC;
+}
+
+* We can indicate the type of the exception, e.g.:
+
+// ex3.cpp
+int sumChar(char a, char b) throw (char) {
+  char sumC = a + b;
+  long sumL = a + b;
+  if (sumC != sumL) {
+    throw sumC;
+  } 
+  return sumC;
+}
+
+* What happens if we indicate a different type of exception, e.g.:
+
+int sumChar(char a, char b) throw (int) { // int, and not char, declared here.
+  char sumC = a + b;
+  long sumL = a + b;
+  if (sumC != sumL) {
+    throw sumC;
+  } 
+  return sumC;
+}
+
+* This code actually compiles previous to C++17. The throw(type) declaration was
+  deprecated after C++17.
+
+* How to handle exceptions in general?
+R1 - Retrying: attempt to change the conditions that led to the exception and
+     execute the routine again from the start.
+R2 - Failure (also known as organized panic): clean up the environment,
+     terminate the call and report failure to the caller.
+
+* Can you give an example of R1?
+
+// ex3.cpp
+#include <iostream> 
+int sumChar(char a, char b) {
+  char sumC = a + b;
+  long sumL = a + b;
+  if (sumC != sumL) {
+    throw sumC;
+  }
+  return sumC;
+}
+void readAndSum() {
+  int i0, i1;
+  std::cout << "Enter two numbers: ";
+  std::cin >> i0;
+  std::cin >> i1;
+  try {
+    char c = sumChar(i0, i1);
+    std::cout << "Sum = " << (int)c << std::endl;
+  } catch(char e) {
+    std::cout << "An exception occurred: " << (int)e << std::endl;
+    readAndSum();
+  }
+}
+int main (int argc, char** argv) {
+  readAndSum();
+  return 0;
+}
+
+* How to write good exceptions?
+- All processing done in a rescue clause should remain simple, and focused on
+  the sole goal of bringing the recipient object back to a stable state,
+  permitting a retry if possible.
+
+* How to declare new exception classes?
+- STL provides a base class specifically designed to declare objects to be
+  thrown as exceptions:
+
+// ex4.cpp
+#include <iostream>
+#include <exception>
+class MyException: public std::exception {
+  const char* what() const throw() {
+    return "My exception happened";
+  }
+};
+int main () {
+  try {
+    throw new MyException();
+  } catch (std::exception* e) {
+    std::cout << e->what() << std::endl;
+  }
+  return 0;
+}
+
+* Instead of catching an object of type "std::exception*", could you catch
+  directly the type MyException*?
+
+#include <iostream>
+#include <exception>
+class MyException: public std::exception {
+  public:
+    const char* what() const throw() {
+      return "My exception happened";
+    }
+};
+int main () {
+  try {
+    throw new MyException();
+  } catch (MyException* e) {
+    std::cout << e->what() << std::endl;
+  }
+  return 0;
+}
+
+* Does the above program contain a memory leak?
+- Yes!
+
+* How to fix that?
+
+int main () {
+  try {
+    throw new MyException();
+  } catch (MyException* e) {
+    std::cout << e->what() << std::endl;
+    delete e;
+  }
+  return 0;
+}
+
+* What is the problem with this code:
+
+int main () {
+  try {
+    throw new MyException();
+  } catch (std::exception* e) {
+    std::cout << e->what() << std::endl;
+  } catch (MyException* e) {
+    std::cout << e->what() << std::endl;
+  }
+  return 0;
+}
+
+* And if we invert the catches, does the problem remain?
+
+int main () {
+  try {
+    throw new MyException();
+  } catch (MyException* e) {
+    std::cout << e->what() << std::endl;
+  } catch (std::exception* e) {
+    std::cout << e->what() << std::endl;
+  }
+  return 0;
+}
+
+* Notice that C++ already defines some builtin exceptions. For instance, which
+  exception will be thrown by the program below?
+
+// ex5.cpp
+#include <iostream>
+#include <exception>
+int main () {
+  try {
+    int* buf = new int[1000000000000000];
+  } catch (std::exception& e) {
+    std::cout << "Standard exception: " << e.what() << std::endl;
+  }
+  return 0;
+}
+
+=== Contracts ===
+
+[Much of this discussion was taken from 'Objet-Oriented Software Construction,
+ by B. Meyer.']
+
+* How to deal with errors in a program?
+- Avoid them.
+- Handle them.
+
+* How to avoid errors?
+- Establish contracts.
+
+* What is a software contract?
+- {P} f {Q}, where
+- P are Pre-conditions.
+- f is the function.
+- Q are Post-conditions.
+
+* What is the semantics of pre and post-conditions?
+- If you promise to call r with P always satisfied then I, in return, promise to
+  always deliver a final state in which Q is satisfied.
+
+* Can you give me an example?
+- { x >= 9 } x = x+5; { x >= 13 }
+
+* How to implement pre and post-conditions?
+- Use exceptions or assertions!
+
+=== Assertions ===
+
+* What are the methods of a stack?
+- push(E e)
+- E pop()
+- bool isEmpty()
+- bool isFull()
+
+* What are the pre and post-conditions of a stack?
+- {!isEmpty()} pop() {!isFull()}
+- {!isFull()} push(e) {!isEmpty()}
+
+* Can you implement the interface for the Stack?
+
+#ifndef STACK_H
+#define STACK_H
+template<class E, unsigned N> class Stack {
+  public:
+    Stack(): _top(0) {}
+    void push(E e);
+    E pop();
+    bool isEmpty() const;
+    bool isFull() const;
+  private:
+    E buf[N];
+    unsigned top;
+};
+#endif
+
+* Can you implement these methods? Let's start with isEmpty and isFull. Do
+  they have pre and post-conditions?
+
+template<class E, unsigned N> bool Stack<E, N>::isEmpty() {
+  return !_top;
+}
+
+template<class E, unsigned N> bool Stack<E, N>::isFull() {
+  return _top == N;
+}
+
+* What about push? How to check the pre-condition? And the post-condition?
+
+template<class E, unsigned N> void Stack<E, N>::push(E e) {
+  assert(!isFull() && "The stack is full.");
+  buf[_top] = e;
+  _top++;
+}
+
+* Why do we need to add the '&&' after the condition in the assert?
+- That lets us print an error message.
+
+* Shouldn't we add an assert at the end of the method, to check the
+  post-condition? Something like:
+  template<class E, unsigned N> void Stack<E, N>::push(E e) {
+    assert(!isFull() && "The stack is full.");
+    buf[_top] = e;
+    _top++;
+    assert(!isEmpty() && "Stack is empty after push.");
+  }
+- This is not necessary, as the second assertion will never be true by
+  construction. Notice that such assertion could be useful during development,
+  as we would be debugging the program.
+
+* What about pop(), can you implement it with the pre-condition?
+
+template<class E, unsigned N> E Stack<E, N>::pop() {
+  assert(!isEmpty() && "The stack is empty.");
+  _top--;
+  return buf[_top];
+}
+
+* What happens when an assertion is true?
+- A runtime error ensues.
+
+* Assertions have a runtime cost (albeit small). What's its cost?
+- The cost of verifying the condition in the assertion.
+
+* How to avoid this cost?
+- It is enough to define the macro NDEBUG before the inclusion of the
+  assert.h header file. For instance:
+
+#define NDEBUG // Should turn assert off
+#include <assert.h>
+
+* How can we be sure that assertions will no longer be in the program?
+
+* Do assertions simplify or complicate the code?
+
+* Programming principle: "Under no circumstances shall the body of a routine ever test for the routine's precondition."
+
+// This code would be redundant:
+template<class E, unsigned N>
+void Stack<E, N>::push(E e) {
+  assert(!isFull() && "The stack is full.");
+  if (!isFull()) {
+    buf[_top] = e;
+    _top++;
+  }
+}
+
+* Do assertions uncover bugs in the program or "bugs in the user"?
+- A run-time assertion violation is the manifestation of a bug in the software.
+
+* How to document assertions?
+- Mention them in doxygen
+
+=== Invariants ===
+
+* What is an "invariant"
+- Global properties of objects that are always valid.
+
+* Can you give me an example of invariant in the Stack class?
+
+* Can you prove the following invariant:
+- _top >= 0 && _top <= N
+
+* How can you prove it?
+1. The invariant is true when the class is created.
+2. Every operation of the class preserves the invariant.
+
+* Is point (1) true?
+- Yes: _top is initialized with zero.
+
+* Is point (2) true?
+- isEmpty and isFull do not update _top.
+- push's assertion ensures that _top != N. Assuming that the other operations
+  cannot make _top > N, we have that _top < N when push runs.
+- pop's assertion ensures that _top != 0.  Assuming that the other operations
+  cannot make _top < 0, we have that _top > 0 when pop runs.
+
+* In general, how to prove that an invariant holds?
+C1: shows that it holds in the constructors (base cases)
+C2: for every other operation, assuming that it holds before the operation is
+    called, shows that it holds after as well (inductive cases)
+
+=== Stack with Exceptions ===
+
+* Can you modify the Stack class, to throw exceptions instead of using
+  assertions?
+
+* We need to create a class to denote the exception:
+
+class StackException: public std::exception {
+  public:
+    StackException(const char* msg): _msg(msg) {}
+    const char* what() const throw() {
+      return _msg;
+    }
+  private:
+    const char* _msg;
+};
+
+* Now, we need to modify the methods that can throw exceptions, e.g.: push and
+  pop:
+
+template<class E, unsigned N> void Stack<E, N>::push(E e) {
+  if (this->isFull()) {
+    throw new StackException("The stack is full.");
+  } else {
+    buf[_top] = e;
+    _top++;
+  }
+}
+template<class E, unsigned N> E Stack<E, N>::pop() {
+  if (this->isEmpty()) {
+    throw new StackException("The stack is empty.");
+  } else {
+    _top--;
+    return buf[_top];
+  }
+}
+
+* And how can we test the Stack?
+
+int main() {
+  const int N = 10;
+  Stack<int, N> s;
+  try {
+    for(int i = 0; i <= N; i++) {
+      s.push(i*i);
+    }
+    while (!s.isEmpty()) {
+      std::cout << s.pop() << std::endl;
+    }
+  } catch(StackException* e) {
+    std::cout << e->what() << std::endl;
+  }
+}
+
+* But that's not good: we don't get to pop from the stack. Can you fix it?
+
+int main() {
+  const int N = 10;
+  Stack<int, N> s;
+  try {
+    for(int i = 0; i <= N; i++) {
+      s.push(i*i);
+    }
+  } catch(StackException* e) {
+    std::cout << e->what() << std::endl;
+  }
+  try {
+    while (!s.isEmpty()) {
+      std::cout << s.pop() << std::endl;
+    }
+  } catch(StackException* e) {
+    std::cout << e->what() << std::endl;
+  }
+}
