@@ -135,3 +135,102 @@ O que é intellisense?
 - Program Information
 
 Como saber quais métodos pertencem à class string?
+
+Como declarar strigns?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string greeting = "Hello, ";
+  std::string name = "Alice";
+  std::string message = greeting + name;
+  std::cout << message << std::endl;
+  return 0;
+}
+
+Como saber o tamanho de uma string?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string sentence = "This is a sample sentence.";
+  std::cout << "Length: " << sentence.length() << std::endl;
+  std::cout << "First: " << sentence[0] << std::endl;
+  std::cout << "Last: " << sentence[sentence.length() - 1] << std::endl;
+  return 0;
+}
+
+Como ler ou escrever strings da entrada?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string favoriteColor;
+  std::cout << "Enter your favorite color: ";
+  std::cin >> favoriteColor;
+  std::cout << "Your favorite color is: " << favoriteColor << std::endl;
+  return 0;
+}
+
+Como extrair substrings?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string sentence = "This is a sample sentence.";
+  // Starting at index 5, extract 10 characters
+  std::string substring = sentence.substr(5, 10); 
+  std::cout << "Substring: " << substring << std::endl;
+  return 0;
+}
+
+Como encontrar substrings?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string sentence = "C++ is a powerful programming language.";
+  // Find the position of the word "powerful"
+  size_t found = sentence.find("powerful");
+  if (found != std::string::npos) {
+    std::cout << "Substring found at position: " << found << std::endl;
+  } else {
+    std::cout << "Substring not found." << std::endl;
+  }
+  return 0;
+}
+
+Como modificar strings?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string sentence = "C++ is amazing.";
+  sentence.replace(7, 2, "was"); // Replace "is" with "was"
+  sentence.insert(11, " really"); // Insert " really" after "was"
+  sentence.erase(14, 4); // Erase "amaz"
+  std::cout << sentence << std::endl;
+  return 0;
+}
+
+Como comparar strings?
+
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string str1 = "apple";
+  std::string str2 = "banana";
+  if (str1 == str2) {
+    std::cout << "Strings are equal." << std::endl;
+  } else {
+    std::cout << "Strings are not equal." << std::endl;
+  }
+  return 0;
+}
