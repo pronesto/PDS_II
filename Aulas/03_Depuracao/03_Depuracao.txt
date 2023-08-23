@@ -151,10 +151,15 @@ $> lldb a.out
 (lldb) process launch
 (lldb) display N
 (lldb) next
-(lldb) si # To enter the function
+(lldb) step # To enter the function
 (lldb) display *limit
 (lldb) display *sum
 (lldb) next
+
+Como ver o endereço de limit e sum?
+
+(lldb) print limit
+(lldb) print sum
 
 O que poderíamos fazer para tornar a função arithProg mais segura?
 
@@ -216,6 +221,17 @@ int main () {
   p1[0] = 2;
   std::cout << p2[0] << std::endl;
   return 0;
+}
+
+Como consertar a implementação de getMem()?
+
+unsigned* getMem() {
+  unsigned* x = new unsigned[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
 }
 
 O que o programa abaixo imprime?
