@@ -1,3 +1,15 @@
+Há algum problema com o programa abaixo?
+
+int main() {
+   int i;
+   i++; // warning: 'i' is used uninitialized
+   return 0;
+}
+
+Como descobrir o problema?
+
+$ clang++ -Wall NonInit.cpp
+
 Quanto imprime o programa abaixo?
 
 #include <iostream>
@@ -151,10 +163,15 @@ $> lldb a.out
 (lldb) process launch
 (lldb) display N
 (lldb) next
-(lldb) si # To enter the function
+(lldb) step # To enter the function
 (lldb) display *limit
 (lldb) display *sum
 (lldb) next
+
+Como ver o endereço de limit e sum?
+
+(lldb) print limit
+(lldb) print sum
 
 O que poderíamos fazer para tornar a função arithProg mais segura?
 
@@ -218,6 +235,21 @@ int main () {
   return 0;
 }
 
+Como usar alguma ferramenta para encontrar o problema?
+
+$ valgrind --track-origins=yes ./a.out
+
+Como consertar a implementação de getMem()?
+
+unsigned* getMem() {
+  unsigned* x = new unsigned[10];
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+}
+
 O que o programa abaixo imprime?
 
 #include <iostream>
@@ -247,8 +279,8 @@ $> clang++ -g stack.cpp
 $> lldb a.out
 (lldb) breakpoint set -name foo
 (lldb) process launch
-(lldb) frame variable &a[1]
-(lldb) frame variable &v
+(lldb) display &a[1]
+(lldb) display &v
 
 E dá para depurar no VSCode?
 - Não há muito suporte para inspeção de memória
@@ -357,3 +389,56 @@ Dá para usar um laço 'for' em vez de um while?
     num = testa_divisores(divisores, next_div, num);
   }
   ...
+
+
+O programa abaixo deveria encontrar o menor valor de um vetor. Quais os problemas dele?
+
+#include <iostream>
+#include <limits>
+#include <vector>
+
+int find_min(std::vector<int> xs, std::size_t begin, std::size_t end) {
+  int min = std::numeric_limits<int>::max();
+  for (std::size_t i = begin; i < end; i++) {
+    int x = xs[i];
+    if (x < min) {
+      min = x;
+    }
+  }
+  return min;
+}
+
+int main() {
+  std::vector<int> xs = {60, 17, 21, 44, 2};
+  std::cout << find_min(xs, 0, 6) << std::endl;
+  return 0;
+}
+
+Como melhorá-lo?
+
+#include <iostream>
+#include <limits>
+#include <vector>
+
+int find_min(std::vector<int> xs, std::size_t begin) {
+  int min = std::numeric_limits<int>::max();
+  for (std::size_t i = begin; i < xs.size(); i++) {
+    int x = xs.at(i); // Verifica limites!
+    if (x < min) {
+      min = x;
+    }
+  }
+  return min;
+}
+
+int main() {
+  std::vector<int> xs = {60, 17, 21, 44, 2};
+  std::cout << find_min(xs, 0) << std::endl;
+  return 0;
+}
+
+Revisão:
+1. Quais ferramentas podem ser usadas para encontrar erros:
+* valgrind
+* clang++/g++ -fsanitize
+* clang++/g++ -g + gdb/lldb
