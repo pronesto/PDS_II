@@ -14,7 +14,7 @@ O que seria memória estática?
 Onde fica armazenado o arranjo x do programa abaixo?
 
 #include <iostream>
-int main() {
+int main(void) {
   int x[] = {2, 3, 5, 7, 11, 13, 17, 19};
   for (int i : x) {
     std::cout << i << std::endl;
@@ -30,7 +30,7 @@ E strings, onde elas ficam?
 Você consegue ver a string no código assembly do programa abaixo?
 
 #include <iostream>
-int main () {
+int main (void) {
   std::string str = "Hello";
   str[1] = 'u';
   std::cout << str << std::endl;
@@ -41,7 +41,7 @@ E as variáveis globais? Por exemplo, onde fica 'global_var' no programa abaixo?
 
 #include <iostream>
 int global_var = 13;
-int main() {
+int main(void) {
   int local_var = 17;
   std::cout << local_var << std::endl;
   std::cout << global_var << std::endl;
@@ -54,11 +54,11 @@ Você já ouviu falar de variáveis estáticas?
 O que será impresso pelo programa abaixo?
 
 #include <iostream>
-int getAndSet() {
+int getAndSet(void) {
   static int counter = 0;
   return ++counter;
 }
-int main() {
+int main(void) {
   std::cout << getAndSet() << std::endl;
   std::cout << getAndSet() << std::endl;
   std::cout << getAndSet() << std::endl;
@@ -67,15 +67,15 @@ int main() {
 E quantas variáveis 'counter' existem no programa abaixo?
 
 #include <iostream>
-int getAndSet_1() {
+int getAndSet_1(void) {
   static int counter = 0;
   return ++counter;
 }
-int getAndSet_2() {
+int getAndSet_2(void) {
   static int counter = 0;
   return ++counter;
 }
-int main() {
+int main(void) {
   for (int i = 0; i < 7; i++) {
     std::cout << "1) " << getAndSet_1() << std::endl;
     std::cout << "2) " << getAndSet_2() << std::endl;
@@ -86,13 +86,13 @@ E quantas variáveis 'counter' existem no programa abaixo?
 
 #include <iostream>
 static int counter = 0; 
-int getAndSet_1() {
+int getAndSet_1(void) {
   return ++counter;
 }
-int getAndSet_2() {
+int getAndSet_2(void) {
   return ++counter;
 }
-int main() {
+int main(void) {
   for (int i = 0; i < 7; i++) {
     std::cout << "1) " << getAndSet_1() << std::endl;
     std::cout << "2) " << getAndSet_2() << std::endl;
@@ -123,7 +123,7 @@ O que perderíamos se não existisse a pilha? Quais programas deixariam de funci
 Você lembra qual era o problema deste programa abaixo?
 
 #include <stdio.h>
-unsigned* getMem() {
+unsigned* getMem(void) {
   unsigned x[10];
   int i;
   for (i = 0; i < 10; i++) {
@@ -131,7 +131,7 @@ unsigned* getMem() {
   }
   return x;
 } 
-int main () {
+int main (void) {
   unsigned *p1 = getMem();
   unsigned *p2 = getMem();
   p1[0] = 2;
@@ -141,8 +141,9 @@ int main () {
 
 Como consertar esse programa?
 
-#include <stdio.h>
-unsigned* getMem() {
+#include <iostream>
+ 
+unsigned* getMem(void) {
   unsigned *x = new unsigned[10];
   int i;
   for (i = 0; i < 10; i++) {
@@ -150,7 +151,8 @@ unsigned* getMem() {
   }
   return x;
 }
-int main () {
+
+int main (void) {
   unsigned *p1 = getMem();
   unsigned *p2 = getMem();
   p1[0] = 2;
@@ -158,33 +160,56 @@ int main () {
   printf("p1 = %d\n", p1[0]);
 }
 
+Onde o arranjo criado pela função getMem é alocado?
+
 Esse programa possui um vazamento de memória. Como observar isso?
-$> g++ -g -fsanitize=address GetMem.cpp
-$> ./a.out
+(linux) g++ -g -fsanitize=address GetMem.cpp
+(linux) ./a.out
 
 Vocês já ouviram falar de uma ferramenta chamada valgrind?
-$> g++ -g GetMem.cpp
-$> valgrind ./a.out
+(linux) g++ -g GetMem.cpp
+(linux) valgrind ./a.out
 
 Como saber onde a memória foi alocada?
-$> valgrind --leak-check=full ./a.out
+(linux) valgrind --leak-check=full ./a.out
 
 Como liberar a memória apontada por 'x', depois que 'x' já não é mais usada?
 
-int main () {
+int main (void) {
   unsigned *p1 = getMem();
   unsigned *p2 = getMem();
   p1[0] = 2;
   p2[0] = 13;
   printf("p1 = %d\n", p1[0]);
-  delete p1;
-  delete p2;
+  delete[] p1;
+  delete[] p2;
+}
+
+Como seria o programa equivalente escrito em C?
+
+#include <iostream>
+unsigned* getMem(void) {
+  unsigned *x = (unsigned*)malloc(10*sizeof(unsigned));
+  int i;
+  for (i = 0; i < 10; i++) {
+    x[i] = i;
+  }
+  return x;
+}
+int main (void) {
+  unsigned *p1 = getMem();
+  unsigned *p2 = getMem();
+  p1[0] = 2;
+  p2[0] = 13;
+  printf("p1 = %d\n", p1[0]);
+  free(p1);
+  free(p2);
 }
 
 Qual é o problema do programa abaixo?
 
 #include <stdio.h>
-unsigned* getMem() {
+unsigned* getMem(void) {
   unsigned *x = new unsigned[10];
   int i;
   for (i = 0; i < 10; i++) {
@@ -192,7 +217,7 @@ unsigned* getMem() {
   }
   return x;
 }
-int main () {
+int main (void) {
   unsigned *p1 = getMem();
   p1[0] = 2;
   printf("p1 = %d\n", p1[0]);
@@ -202,16 +227,21 @@ int main () {
 
 Como capturar esse problema com valgrind?
 
-$> g++ -g Dangling.cpp
-$> valgrind ./a.out
+(linux) g++ -g Dangling.cpp
+(linux) valgrind ./a.out
 
 Pela saída de valgrind, onde acontece a alocação, a deleção e a leitura 
 inválida?
 
+Como capturar este problema usando address sanitizer?
+
+$> clang++ -fsanitize=address file.cpp
+$> ./a.out
+
 E este programa abaixo, o que ele imprime?
 
 #include <stdio.h> 
-unsigned* getMem() {
+unsigned* getMem(void) {
   unsigned *x = new unsigned[10];
   int i;
   for (i = 0; i < 10; i++) {
@@ -219,7 +249,7 @@ unsigned* getMem() {
   }
   return x;
 }
-int main () {
+int main (void) {
   unsigned *p1 = getMem();
   p1[0] = 2;
   printf("p1 = %d\n", p1[0]);
@@ -231,6 +261,14 @@ int main () {
   printf("p2 = %d\n", p2[0]);
 }
 
+Como capturar este problema usando address sanitizer?
+
+$> clang++ -fsanitize=address file.cpp
+$> ./a.out
+
+Passagem de parâmetros
+======================
+
 O código abaixo consegue trocar o valor das variáveis 'x' e 'y'?
 
 #include <iostream>
@@ -239,7 +277,7 @@ void swap(int x, int y) {
   x = y;
   y = tmp;
 }
-int main() {
+int main(void) {
   int a = 2;
   int b = 3;
   std::cout << "a = " << a << ", b = " << b << std::endl;
@@ -255,7 +293,7 @@ void swap(int* x, int* y) {
   *x = *y;
   *y = tmp;
 }
-int main() {
+int main(void) {
   int a = 2;
   int b = 3;
   std::cout << "a = " << a << ", b = " << b << std::endl;
@@ -274,7 +312,40 @@ void swapR(int& x, int& y) {
 }
 
 Qual a diferença entre ponteiros e referências?
-- Inicialização: "swapP(&a, nullptr);" funciona, mas "swapR(a, nullptr)" não
+- Inicialização:
+#include <iostream>
+int main(void) {
+  int j = 2;
+  int& i0 = nullptr; // Nao funciona
+  int& i1 = 0;       // Nao funciona
+  int& i2;           // Nao funciona
+  int& i3 = j;       // Funciona
+  std::cout << i0 << std::endl;
+  std::cout << i1 << std::endl;
+  std::cout << i2 << std::endl;
+  std::cout << i3 << std::endl;
+}
+
+- Re-atribuicao
+int main(void) {
+  int j0 = 2;
+  int& i1 = j0;       // Funciona
+  int j1 = 3;
+  i1 = j1;            // Nao funciona
+  return 0;
+}
+
+- Aritmetica:
+#include <iostream>
+int main(void) {
+  int x[] = {2, 3, 5, 7, 11, 13, 17, 19};
+  int *p = x;
+  while (*p != 19) {
+    std::cout << *p << std::endl;
+    ++p; // Nao existe um equivalente com referencias.
+  }
+  return 0;
+}
 
 Qual é o problema com ponteiros e referências?
 
@@ -300,7 +371,7 @@ long sum_ref(std::vector<int>& v) {
   return sum;
 }
 
-int main() {
+int main(void) {
   std::chrono::steady_clock::time_point begin, end;
   unsigned vec_size;
   std::cin >> vec_size;
@@ -316,7 +387,7 @@ int main() {
   end = std::chrono::steady_clock::now();
   std::cout << "Tempo sum_copy = " <<
     std::chrono::duration_cast<std::chrono::microseconds>
-    (end - begin).count() << "[us]" << std::endl;
+    (end - begin).count() << "us" << std::endl;
 
   begin = std::chrono::steady_clock::now();
 
@@ -325,5 +396,5 @@ int main() {
   end = std::chrono::steady_clock::now();
   std::cout << "Tempo sum_ref = " <<
     std::chrono::duration_cast<std::chrono::microseconds>
-    (end - begin).count() << "[us]" << std::endl;
+    (end - begin).count() << "us" << std::endl;
 }
