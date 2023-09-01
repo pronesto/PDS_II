@@ -30,10 +30,15 @@ int factDoW(int n) {
   }
 }
 
+int factR(int n) {
+  return n < 1 ? 1 : n * factR(n-1);
+}
+
 int main() {
   int n;
   std::cin >> n;
   std::cout << factF(n) << std::endl;
   std::cout << factW(n) << std::endl;
   std::cout << factDoW(n) << std::endl;
+  std::cout << factR(n) << std::endl;
 }
