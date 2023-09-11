@@ -143,6 +143,8 @@ int main(int argc, char** argv) {
 
 * How can we compute the norm of a point?
 
+#include <cmath>
+...
 struct Point {
   Point(const double xx, const double yy): x(xx), y(yy) {}
   const double x;
