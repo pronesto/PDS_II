@@ -42,9 +42,17 @@ void print_vecRA(std::vector<unsigned>& v) {
   }
 }
 
+void print_vecDecI(std::vector<unsigned>& v) {
+  auto p = v.end();
+  while (p != v.begin()) {
+    --p;
+    std::cout << factR(*p) << std::endl;
+  }
+}
+
 int main() {
   std::vector<unsigned> v;
   read_vec(v);
   std::sort(v.begin(), v.end());
-  print_vecRA(v);
+  print_vecDecI(v);
 }
