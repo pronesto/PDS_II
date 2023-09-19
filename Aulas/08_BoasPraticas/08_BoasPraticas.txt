@@ -52,6 +52,8 @@
 * How to create a type name in C++?
 // Define the new type name:
 typedef unsigned long ulong;
+- or -
+using ulong = unsigned long;
 // Use the new type name to declare types:
 unsigned long l1;
 ulong l2;
@@ -219,6 +221,22 @@ int main() {
   point1[1] = 2.76;
   point2[0] = point1[1];
 }
+
+- or -
+
+#include <iostream>
+using Point = double[2];
+int main() {
+  Point point1;
+  Point point2;
+  point1[0] = 3.14;
+  point1[1] = 2.76;
+  point2[0] = point1[1];
+  std::cout << point1[1] << std::endl;
+  std::cout << point2[0] << std::endl;
+}
+
+* Which syntax is better: using or typedef?
 
 * There are still problems. Which problems?
 

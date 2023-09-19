@@ -12,7 +12,7 @@ void Lista::insere(int data) {
 
 int Lista::primeiro() const {
   if (vazia()) {
-    std::cout << "Tentativa de remover elemento de lista vazia\n";
+    std::cout << "Tentativa de ler elemento de lista vazia\n";
     return 0;
   } else {
     return _buffer[0];

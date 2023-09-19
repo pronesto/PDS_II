@@ -21,7 +21,7 @@ void Lista::insere(int data) {
 
 int Lista::primeiro() const {
   if (vazia()) {
-    std::cout << "Tentativa de remover elemento de lista vazia\n";
+    std::cout << "Tentativa de ler primeiro elemento de lista vazia\n";
     return 0;
   } else {
     return head->data;
@@ -32,23 +32,27 @@ void Lista::remove(int data) {
   if (vazia()) {
     std::cout << "Tentativa de remover elemento de lista vazia\n";
   }
+  // Localizar o dado:
   Celula *current = head;
   Celula *previous = nullptr;
-  while (current != nullptr) {
-    if (current->data == data) {
-      if (previous == nullptr) { // HEAD
-        head = current->next;
-      } else if (current->next == nullptr) { //TAIL
-        previous->next = nullptr;
-        tail = previous;
-      } else {
-        previous->next = current->next;
-      }
-      delete current;
-      return;
-    }
+  while (current != nullptr && current->data != data) {
     previous = current;
     current = current->next;
+  }
+  // O dado estah presente na lista:
+  if (current != nullptr) {
+    if (previous == nullptr) {
+      // Vamos apagar a cabeca da lista
+      head = current->next;
+    } else if (current->next == nullptr) {
+      // Vamos apagar o ultimo elemento
+      previous->next = nullptr;
+      tail = previous;
+    } else {
+      // Vamos apagar um elemento do meio.
+      previous->next = current->next;
+    }
+    delete current;
   }
 }
 
