@@ -239,6 +239,9 @@ void test5() {
   test4();
 }
 
+* Por que o teste de número de pontos falha? Temos cinco pontos, onde antes se
+  esperavam quatro. Por que?
+
 * Como lidar com isso?
 
 ### Destrutores
