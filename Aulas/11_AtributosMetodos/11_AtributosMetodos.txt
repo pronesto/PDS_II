@@ -310,6 +310,23 @@ void test6() {
 * Para que serve o destrutor?
 - Para liberar recursos!
 
+* Quantos construtores seriam chamados no teste abaixo?
+
+void test8() {
+  std::cout << "Vector\n";
+  std::vector<Point> v;
+  std::cout << "Inserting points:\n";
+  for (int i = 0; i < 2; ++i) {
+    Point p(i, i);
+    std::cout << "Declarou o ponto " << p.to_string() << std::endl;
+    v.push_back(p);
+  }
+  std::cout << "Printing points:\n";
+  for (const Point& p: v) {
+    std::cout << p.to_string() << std::endl;
+  }
+}
+
 * Crie uma classe Segment, que represente um segmento de reta, formado por dois
   pontos.
 
