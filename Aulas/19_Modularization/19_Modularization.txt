@@ -67,20 +67,7 @@ Unistantiable: namespace
 * Can we have namespaces spanning multiple files?
 
 // ClassDefs.hpp:
-#ifndef CLASS_DEFS_H
-#define CLASS_DEFS_H
-namespace PDS_II {
-  struct A {
-    int x, y;
-    void setX(int);
-    void setY(int);
-  };
-  struct B {
-    double a, b;
-    double getSum() const;
-  };
-}
-#endif
+ C
 
 // ClassDefs_A.cpp:
 #include "ClassDefs.hpp"
@@ -228,19 +215,31 @@ int main() {
   std::cout << a.x << std::endl;
 }
 
-* What would be a Makefile that reflects these dependencies?
+* Why can we compile Main without the other cpp files? E.g., it works:
+$> clang++ Main.cpp
 
-Main: ClassDefs_A.o ClassDefs_B.o Main.o
-	clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+* What if Main.cpp is as follows?
 
-ClassDefs_A.o: ClassDefs_A.cpp ClassDefs.hpp
-	clang++ -c -o ClassDefs_A.o ClassDefs_A.cpp
+#include <iostream>
+#include "ClassDefs.hpp"
+int main() {
+  PDS_II::A a;
+  a.x = 1;
+  std::cout << a.x << std::endl;
+}
 
-ClassDefs_B.o: ClassDefs_B.cpp ClassDefs.hpp
-	clang++ -c -o ClassDefs_B.o ClassDefs_B.cpp
+* What if Main.cpp is as follows?
 
-Main.o: Main.cpp ClassDefs.hpp
-	clang++ -c -o Main.o Main.cpp
+#include <iostream>
+#include "ClassDefs.hpp"
+int main() {
+  PDS_II::A a;
+  a.x = 1;
+  std::cout << a.x << std::endl;
+  a.setX(2);
+  PDS_II::B b;
+  std::cout << b.getSum() << std::endl;
+}
 
 * How can we compile all these files?
 
@@ -257,7 +256,7 @@ clang++ Main.cpp ClassDefs_A.cpp ClassDefs_B.cpp
 
 $> cat Makefile
 classdef: ClassDefs_A.cpp ClassDefs_B.cpp Main.cpp
-	clang++ -o Main.exe ClassDefs_A.cpp ClassDefs_B.cpp Main.cpp
+	clang++ -o Main.exe ClassDefs_A.cpp ClassDefs_B.cpp Main.cpp -Iinclude
 
 * How can we use the Makefile?
 
@@ -277,9 +276,23 @@ $> ls -l Main.exe
 
 * How can you reduce this problem? (Mind it: I am saying "Reduce")
 
+Main: ClassDefs_A.o ClassDefs_B.o Main.o
+  clang++ -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
+
+ClassDefs_A.o: ClassDefs_A.cpp
+  clang++ -c -o ClassDefs_A.o ClassDefs_A.cpp -Iinclude
+
+ClassDefs_B.o: ClassDefs_B.cpp
+  clang++ -c -o ClassDefs_B.o ClassDefs_B.cpp -Iinclude
+
+Main.o: Main.cpp
+  clang++ -c -o Main.o Main.cpp -Iinclude
+
+* Notice that we can use macros!
+
 CXX  = clang++
 %.o: %.cpp
-	$(CXX) -c -o $@ $<
+	$(CXX) -c -o $@ $< -Iinclude
 classdef: ClassDefs_A.o ClassDefs_B.o Main.o
 	$(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
 
@@ -334,10 +347,10 @@ struct A {
 
 CXX  = clang++
 
-DEPS = ClassDefs.hpp
+DEPS = include/ClassDefs.hpp
 
 %.o: %.cpp $(DEPS)
-	$(CXX) -c -o $@ $<
+	$(CXX) -c -o $@ $< -Iinclude
 
 classdef: ClassDefs_A.o ClassDefs_B.o Main.o
 	$(CXX) -o Main.exe ClassDefs_A.o ClassDefs_B.o Main.o
@@ -353,13 +366,13 @@ classdef: ClassDefs_A.o ClassDefs_B.o Main.o
 
 * We can make the Makefile more general using the macro "$^":
 
-CXX      = clang++
-DEPS = ClassDefs.hpp
-OBJ      = ClassDefs_A.o ClassDefs_B.o Main.o
+CXX  = clang++
+DEPS = include/ClassDefs.hpp
+OBJ = ClassDefs_A.o ClassDefs_B.o Main.o
 %.o: %.cpp $(DEPS)
-        $(CXX) -c -o $@ $<
+  $(CXX) -c -o $@ $< -Iinclude
 Main: $(OBJ)
-        $(CXX) -o $@.exe $^
+  $(CXX) -o $@.exe $^
 
 * What is this macro $^?
 - It denotes the right side of the ":". In this case, that's $(OBJ), which is
