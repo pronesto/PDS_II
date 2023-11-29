@@ -313,3 +313,16 @@ struct Lista {
 };
 
 As interfaces de ListaVetor e ListaEncadeada são iguais?
+
+Declarações e Definições
+========================
+
+Declaração:
+struct U;
+
+Definição:
+struct U { int x, y; };
+
+Lei-0:
+Declarações vêm antes de menções:
+

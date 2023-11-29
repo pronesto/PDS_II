@@ -121,3 +121,206 @@ void print_vecRA(std::vector<unsigned>& v) {
     std::cout << factR(*p) << std::endl;
   }
 }
+
+-- Dá para decrementar um iterador, em vez de usar o reverso?
+
+void print_vecDecI(std::vector<unsigned>& v) {
+  auto p = v.end();
+  while (p != v.begin()) { 
+    --p;
+    std::cout << factR(*p) << std::endl;
+  }
+}
+
+-- Seria possível usar um set, em vez de um vector, para imprimir os fatoriais?
+
+#include <set>
+#include <iostream>
+
+int factR(int n) { return n < 1 ? 1 : n * factR(n-1); }
+
+void read_set(std::set<unsigned>& s) {
+  unsigned input = 0;
+  while (std::cin >> input) {
+    s.insert(input);
+  }
+}
+
+void print_set(std::set<unsigned>& s) {
+  for (unsigned u: s) {
+    std::cout << factR(u) << std::endl;
+  }
+}
+
+int main() {
+  std::set<unsigned> s;
+  read_set(s);
+  print_set(s);
+}
+
+-- Por que não é necessário ordenar o objeto 's' no programa acima?
+
+-- É possível usar a mesma sintaxe de iteradores com instâncias de set?
+
+void print_setI(std::set<unsigned>& s) {
+  for (std::set<unsigned>::iterator p = s.begin(); p != s.end(); p++) {
+    std::cout << factR(*p) << std::endl;
+  }
+}
+
+-- Para trás também?
+
+void print_setR(std::set<unsigned>& s) {
+  std::set<unsigned>::reverse_iterator p;
+  for (p = s.rbegin(); p != s.rend(); p++) {
+    std::cout << factR(*p) << std::endl;
+  }
+}
+
+-- E com 'auto' também?
+
+void print_setR(std::set<unsigned>& s) {
+  for (auto p = s.rbegin(); p != s.rend(); p++) {
+    std::cout << factR(*p) << std::endl;
+  }
+}
+
+-- Você poderia escrever um gerador de números primos? Qual seria a estrutura deste
+programa?
+
+int main() {
+  // 1. Read the limit for the highest prime:
+  // 2. Generate the primes:
+  // 3. Print the primes:
+}
+
+-- Como armazenar os números primos?
+std::vector<unsigned> primes
+
+-- Você poderia adicionar código à estrutura acima?
+
+int main() {
+  // Read the limit for the highest prime:
+  //
+  unsigned n = 0;
+  std::cin >> n;
+  
+  // Generate the primes:
+  //
+  std::vector<unsigned> primes;
+  gen_primes(primes, n);
+
+  // Print the primes:
+  //
+  for (unsigned c: primes) {
+    std::cout << c << std::endl;
+  } 
+}
+
+-- Como seria a implementação de gen_primes?
+
+void gen_primes(std::vector<unsigned>& primes, const unsigned N) {
+  primes.push_back(2);
+  for (unsigned candidate = 3; candidate < N; candidate += 2) {
+    if (find_least_div(primes, candidate) == 1) {
+      primes.push_back(candidate);
+    }
+  }
+}
+
+-- E como seria a implementação de find_least_div?
+
+unsigned find_least_div(std::vector<unsigned>& primes, const unsigned N) {
+  for (unsigned prime: primes) {
+    if (prime * prime > N) {
+      break;
+    }
+    if (N % prime == 0) {
+      return prime;
+    }
+  }
+  return 1;
+}
+
+-- Como a gente sabe que o iterador percorre os números na ordem que queremos?
+
+-- Você poderia modificar o método principal para receber um argumento em linha de
+comando?
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Sintaxe: ./a.out N\n";
+    return 1;
+  } else {
+    const unsigned N = std::stol(argv[1]);
+    std::vector<unsigned> primes;
+    gen_primes(primes, N);
+    for (unsigned c: primes) {
+      std::cout << c << std::endl;
+    }
+  } 
+}
+
+-- Como medir o tempo de execução do programa?
+
+#include <vector>
+#include <chrono>
+#include <iostream>
+
+unsigned find_least_div(std::vector<unsigned>& primes, const unsigned N) {
+  for (unsigned prime: primes) {
+    if (prime * prime > N) {
+      break;
+    }
+    if (N % prime == 0) {
+      return prime;
+    }
+  }
+  return 1;
+}
+
+void gen_primes(std::vector<unsigned>& primes, const unsigned N) {
+  primes.push_back(2);
+  for (unsigned candidate = 3; candidate < N; candidate += 2) {
+    if (find_least_div(primes, candidate) == 1) {
+      primes.push_back(candidate);
+    }
+  }
+}
+
+void measure_time(std::vector<unsigned>& primes, const unsigned N) {
+  std::chrono::steady_clock::time_point begin, end;
+  begin = std::chrono::steady_clock::now();
+  gen_primes(primes, N);
+  end = std::chrono::steady_clock::now();
+  std::cerr << "Tempo: " <<
+    std::chrono::duration_cast<std::chrono::microseconds>
+    (end - begin).count() << "usec" << std::endl;
+}
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Sintaxe: ./a.out N\n";
+    return 1;
+  } else {
+    const unsigned N = std::stol(argv[1]);
+    std::vector<unsigned> primes;
+    measure_time(primes, N);
+    for (unsigned c: primes) {
+      std::cout << c << std::endl;
+    }
+  } 
+}
+
+-- E como evitar de imprimir toda a saída do programa?
+./a.out 100000 > /dev/null
+Tempo: 15781usec
+
+-- Seria possível usar outra estrutura de dados em vez de vector?
+:%s/vector/list/g
+
+- or -
+
+:%s/vector/deque/g
+
+-- What are the differences between vector, list and deque?
