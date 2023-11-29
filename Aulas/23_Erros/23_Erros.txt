@@ -353,6 +353,10 @@ template<class E, unsigned N> E Stack<E, N>::pop() {
 
 * How can we be sure that assertions will no longer be in the program?
 
+* Can you disable assertions in the command line, when compiling programs?
+
+$> clang++ -DNDEBUG Stack.cpp
+
 * Do assertions simplify or complicate the code?
 
 * Programming principle: "Under no circumstances shall the body of a routine ever test for the routine's precondition."
